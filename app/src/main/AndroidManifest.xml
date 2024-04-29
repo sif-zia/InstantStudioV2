@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MyApplication"
+        tools:targetApi="31">
+        <activity
+            android:name=".SelectionModule"
+            android:exported="false"
+            android:label="@string/title_activity_selection_module"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
+            android:name=".CroppingModule"
+            android:exported="false"
+            android:label="@string/title_activity_cropping_module"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
+            android:name=".ForegroundModule"
+            android:exported="false"
+            android:label="@string/title_activity_fg_module"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
+            android:name=".BackgroundModule"
+            android:exported="false"
+            android:label="@string/title_activity_bg_module"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
+            android:name=".FilterModule"
+            android:exported="false"
+            android:label="@string/title_activity_filter_module"
+            android:theme="@style/Theme.MyApplication" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.myapplication.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <!-- Specify the paths for which this FileProvider should be used -->
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
+            android:name=".AdvanceEditingPenTool"
+            android:exported="false"
+            android:label="@string/title_activity_advance_editing_pen_tool"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
+            android:name=".AdvanceEditingCloningTool"
+            android:exported="false"
+            android:label="@string/title_activity_advance_editing_cloning_tool"
+            android:theme="@style/Theme.MyApplication" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MyApplication">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

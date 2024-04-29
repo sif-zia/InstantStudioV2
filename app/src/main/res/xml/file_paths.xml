@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--  Define the directories or files accessible by the FileProvider  -->
+    <cache-path name="cache" path="."/>
+</paths>
