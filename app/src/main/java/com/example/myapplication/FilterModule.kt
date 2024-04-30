@@ -71,6 +71,7 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Surface
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -100,6 +101,12 @@ class FilterModule : ComponentActivity() {
             val autoapplyicon = painterResource(R.drawable.autoapply)
             val cancel_image = painterResource(R.drawable.cancel_button)
             val done_image = painterResource(R.drawable.baseline_check_24)
+            val gradientcolors = listOf(
+                Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
+            )
+            var bgColor = Color(12,32,63)
+            var appbarColor = Color(25,56,106)
+
             if (showDialog) {
                 Dialog(
                     onDismissRequest = { showDialog = false }
@@ -175,14 +182,13 @@ class FilterModule : ComponentActivity() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(5.dp)
-            ) {
-                ImageCard(painter = painter, contentDescription = ".")
-            }
+                    .background(bgColor)
+
+            )
             CommonAppBar(title = "Filters", modifier = Modifier.background(color = Color.DarkGray))
 
 
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(brush = Brush.verticalGradient(gradientcolors))) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -323,15 +329,14 @@ class FilterModule : ComponentActivity() {
                 LazyRow(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp)
-                        .clip(RoundedCornerShape(15.dp)).align(Alignment.CenterHorizontally)
+                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp)).align(Alignment.CenterHorizontally)
                 ) {
 
                     item {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
-                                .background(Color.DarkGray)
+                                .background(appbarColor)
                                 .clickable {
                                     if(allowDoubleUndo) {
                                         currentFilter=undoFilter(filterStack)
@@ -349,7 +354,7 @@ class FilterModule : ComponentActivity() {
                                     painter = undoicon,
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
-                                        .size(20.dp)
+                                        .size(23.dp)
 
                                 )
                                 Text(
@@ -367,7 +372,7 @@ class FilterModule : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
-                                .background(Color.DarkGray)
+                                .background(appbarColor)
                                 .clickable {
                                     val inputStream =
                                         context.contentResolver.openInputStream(com.example.myapplication.imageUri!!)
@@ -420,7 +425,7 @@ class FilterModule : ComponentActivity() {
                                     painter = autoapplyicon,
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
-                                        .size(20.dp)
+                                        .size(23.dp)
 
                                 )
                                 Text(
@@ -438,7 +443,7 @@ class FilterModule : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
-                                .background(Color.DarkGray)
+                                .background(appbarColor)
                                 .clickable {
                                     showDialog = true
                                 }
@@ -452,7 +457,7 @@ class FilterModule : ComponentActivity() {
                                     painter = filtericon,
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
-                                        .size(20.dp)
+                                        .size(23.dp)
 
                                 )
                                 Text(
@@ -470,7 +475,7 @@ class FilterModule : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
-                                .background(Color.DarkGray)
+                                .background(appbarColor)
                                 .clickable {
                                     currentFilter = null
                                 }
@@ -484,7 +489,7 @@ class FilterModule : ComponentActivity() {
                                     painter = reseticon,
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
-                                        .size(20.dp)
+                                        .size(23.dp)
 
                                 )
                                 Text(
