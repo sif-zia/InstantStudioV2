@@ -100,8 +100,8 @@ import com.example.myapplication.contract.LaunchSelectionModuleContract
 import java.io.InputStream
 import kotlin.math.cos
 import kotlin.math.sin
-
-
+import androidx.compose.ui.platform.LocalConfiguration
+import com.example.myapplication.widget.CommonAppBar
 
 
 var imageUri: Uri? = null
@@ -219,15 +219,20 @@ fun Brightness(navController: NavController) {
         bitmapState.value = applyBrightness(originalBitmap, brightness)
     }
 
+    CommonAppBar(title = "Brightness", modifier = Modifier.background(color = Color.DarkGray))
+
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .size(600.dp)
                 .padding(20.dp)
+                .padding(top =29.dp)
         ) {
             bitmapState.value?.let { bitmap ->
                 Image(
@@ -236,15 +241,15 @@ fun Brightness(navController: NavController) {
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth()
-                        .height(500.dp)
+                        .height(550.dp)
                 )
             }
         }
-        val sliderColors = SliderDefaults.colors(
-            thumbColor = Color.Gray, // Color of the slider thumb
-            activeTrackColor = Color.Gray, // Color of the track to the right of the thumb
-            inactiveTrackColor = Color.Gray.copy(alpha = 0.5f), // Color of the track to the left of the thumb
 
+        val sliderColors = SliderDefaults.colors(
+            thumbColor = appbarColor, // Color of the slider thumb
+            activeTrackColor = appbarColor,  // Color of the track to the right of the thumb
+            inactiveTrackColor = Color.LightGray // Color of the track to the left of the thumb
         )
 
         Slider(
@@ -257,92 +262,95 @@ fun Brightness(navController: NavController) {
             valueRange = 0.3f..1.5f, // Adjust the range as needed
             steps = 10,
             colors = sliderColors,
-            modifier = Modifier.fillMaxWidth().padding(5.dp)
+            modifier = Modifier.fillMaxWidth().padding(20.dp)
         )
 
-
-        LazyRow(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.Bottom,
-            modifier = Modifier
-                .padding(18.dp)
-                .fillMaxWidth()
+        Column(
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start
         ) {
-
-            item {
-                Spacer(modifier = Modifier.width(12.dp))
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray)
-                        .padding(4.dp)
-                        .clickable { navController.navigate("EditingScreen") }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
+            val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+            val halfScreenWidth = (screenWidth / 2)
+            Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
+            //First row, where cancel and done buttons should be
+            LazyRow(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = halfScreenWidth/2 +24.25.dp, bottom = 13.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .background(appbarColor)
+                            .padding(4.dp)
+                            .clickable {
+                                navController.navigate("EditingScreen")
+                            }
                     ) {
-                        Image(
-                            painter = cancel,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                        )
-                        Text(
-                            text = "Cancel",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = cancel,
+                                contentDescription = "Your Icon Description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                            )
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Justify,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray)
-                        .padding(4.dp)
-                        .clickable {
-                            bitmapState.value?.let { bitmap ->
-                                val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                                imageUri=updatedUri
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .background(appbarColor)
+                            .padding(4.dp)
+                            .clickable {
+                                bitmapState.value?.let { bitmap ->
+                                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
+                                    imageUri = updatedUri
 
-                                if (updatedUri != Uri.EMPTY) {
-                                    navController.navigate("EditingScreen")
+                                    if (updatedUri != Uri.EMPTY) {
+                                        navController.navigate("EditingScreen")
+                                    }
                                 }
                             }
-                        }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Image(
-                            painter = done,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                        )
-                        Text(
-                            text = "Done",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = done,
+                                contentDescription = "Your Icon Description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                            )
+                            Text(
+                                text = "Done",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Justify,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
                     }
                 }
             }
         }
-
     }
 }
 
@@ -380,6 +388,7 @@ fun Hue(navController: NavController) {
         bitmapState.value = applyHue(originalBitmap, saturation)
     }
 
+    CommonAppBar(title = "Hue", modifier = Modifier.background(color = Color.DarkGray))
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -391,6 +400,7 @@ fun Hue(navController: NavController) {
             modifier = Modifier
                 .size(600.dp)
                 .padding(20.dp)
+                .padding(top =29.dp)
         ) {
             bitmapState.value?.let { bitmap ->
                 Image(
@@ -405,10 +415,9 @@ fun Hue(navController: NavController) {
         }
 
         val sliderColors = SliderDefaults.colors(
-            thumbColor = Color.Gray, // Color of the slider thumb
-            activeTrackColor = Color.Gray, // Color of the track to the right of the thumb
-            inactiveTrackColor = Color.Gray.copy(alpha = 0.5f), // Color of the track to the left of the thumb
-
+            thumbColor = appbarColor, // Color of the slider thumb
+            activeTrackColor = appbarColor,  // Color of the track to the right of the thumb
+            inactiveTrackColor = Color.LightGray // Color of the track to the left of the thumb
         )
 
         Slider(
@@ -424,83 +433,88 @@ fun Hue(navController: NavController) {
             modifier = Modifier.fillMaxWidth().padding(20.dp)
         )
 
-        LazyRow(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.Bottom,
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()
+        Column(
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start
         ) {
-
-            item {
-                Spacer(modifier = Modifier.width(12.dp))
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray)
-                        .padding(4.dp)
-                        .clickable { navController.navigate("EditingScreen") }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
+            val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+            val halfScreenWidth = (screenWidth / 2)
+            Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
+            //First row, where cancel and done buttons should be
+            LazyRow(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = halfScreenWidth/2 +24.25.dp, bottom = 13.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .background(appbarColor)
+                            .padding(4.dp)
+                            .clickable {
+                                navController.navigate("EditingScreen")
+                            }
                     ) {
-                        Image(
-                            painter = cancel,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                        )
-                        Text(
-                            text = "Cancel",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = cancel,
+                                contentDescription = "Your Icon Description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                            )
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Justify,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray)
-                        .padding(4.dp)
-                        .clickable {
-                            bitmapState.value?.let { bitmap ->
-                                val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                                imageUri=updatedUri
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .background(appbarColor)
+                            .padding(4.dp)
+                            .clickable {
+                                bitmapState.value?.let { bitmap ->
+                                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
+                                    imageUri = updatedUri
 
-                                if (updatedUri != Uri.EMPTY) {
-                                    navController.navigate("EditingScreen")
+                                    if (updatedUri != Uri.EMPTY) {
+                                        navController.navigate("EditingScreen")
+                                    }
                                 }
                             }
-                        }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Image(
-                            painter = done,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                        )
-                        Text(
-                            text = "Done",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = done,
+                                contentDescription = "Your Icon Description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                            )
+                            Text(
+                                text = "Done",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Justify,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -554,6 +568,7 @@ fun BlackWhite(navController: NavController) {
         bitmapState.value = applyBlackWhite(originalBitmap, saturation)
     }
 
+    CommonAppBar(title = "B&W", modifier = Modifier.background(color = Color.DarkGray))
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -565,6 +580,7 @@ fun BlackWhite(navController: NavController) {
             modifier = Modifier
                 .size(600.dp)
                 .padding(20.dp)
+                .padding(top =29.dp)
         ) {
             bitmapState.value?.let { bitmap ->
                 Image(
@@ -579,10 +595,9 @@ fun BlackWhite(navController: NavController) {
         }
 
         val sliderColors = SliderDefaults.colors(
-            thumbColor = Color.Gray, // Color of the slider thumb
-            activeTrackColor = Color.Gray, // Color of the track to the right of the thumb
-            inactiveTrackColor = Color.Gray.copy(alpha = 0.5f), // Color of the track to the left of the thumb
-
+            thumbColor = appbarColor, // Color of the slider thumb
+            activeTrackColor = appbarColor,  // Color of the track to the right of the thumb
+            inactiveTrackColor = Color.LightGray // Color of the track to the left of the thumb
         )
 
         Slider(
@@ -598,83 +613,88 @@ fun BlackWhite(navController: NavController) {
             modifier = Modifier.fillMaxWidth().padding(20.dp)
         )
 
-        LazyRow(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.Bottom,
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()
+        Column(
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start
         ) {
-
-            item {
-                Spacer(modifier = Modifier.width(12.dp))
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray)
-                        .padding(4.dp)
-                        .clickable { navController.navigate("EditingScreen") }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
+            val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+            val halfScreenWidth = (screenWidth / 2)
+            Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
+            //First row, where cancel and done buttons should be
+            LazyRow(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = halfScreenWidth/2 +24.25.dp, bottom = 13.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            ) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .background(appbarColor)
+                            .padding(4.dp)
+                            .clickable {
+                                navController.navigate("EditingScreen")
+                            }
                     ) {
-                        Image(
-                            painter = cancel,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                        )
-                        Text(
-                            text = "Cancel",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = cancel,
+                                contentDescription = "Your Icon Description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                            )
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Justify,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.DarkGray)
-                        .padding(4.dp)
-                        .clickable {
-                            bitmapState.value?.let { bitmap ->
-                                val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                                imageUri=updatedUri
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(70.dp)
+                            .background(appbarColor)
+                            .padding(4.dp)
+                            .clickable {
+                                bitmapState.value?.let { bitmap ->
+                                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
+                                    imageUri = updatedUri
 
-                                if (updatedUri != Uri.EMPTY) {
-                                    navController.navigate("EditingScreen")
+                                    if (updatedUri != Uri.EMPTY) {
+                                        navController.navigate("EditingScreen")
+                                    }
                                 }
                             }
-                        }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Image(
-                            painter = done,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                        )
-                        Text(
-                            text = "Done",
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = done,
+                                contentDescription = "Your Icon Description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                            )
+                            Text(
+                                text = "Done",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                textAlign = TextAlign.Justify,
+                                modifier = Modifier.padding(5.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -713,6 +733,8 @@ fun applyBlackWhite(bitmap: Bitmap?, saturation: Float): Bitmap? {
     return mutableBitmap
 }
 
+
+
 fun bitmapToUri(context: Context, bitmap: ImageBitmap): Uri {
     // Generate a unique file name for the cropped image
     val timestamp = System.currentTimeMillis()
@@ -741,12 +763,15 @@ fun bitmapToUri(context: Context, bitmap: ImageBitmap): Uri {
 }
 
 
+
 @Composable
 fun Basic(navController: NavController){
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
     val exp = painterResource(R.drawable.exp)
     val hue = painterResource(R.drawable.blur)
     val black = painterResource(R.drawable.contrast)
+
+    CommonAppBar(title = "Basic Tools", modifier = Modifier.background(color = Color.DarkGray))
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -763,32 +788,30 @@ fun Basic(navController: NavController){
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth()
-                    .height(550.dp)
+                    .height(500.dp)
             )
         }
     }
 
     Column(
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally // Align to the center horizontally
+        horizontalAlignment = Alignment.Start
     ) {
-        Spacer(modifier = Modifier.weight(0.2f))
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val halfScreenWidth = (screenWidth / 2)
+        Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
+        //First row, where cancel and done buttons should be
         LazyRow(
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(18.dp)
-                .padding(bottom = 10.dp, start = 78.dp)
-                .width(200.dp)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(35.dp))
-        ){
-
+            modifier = Modifier.padding(start = halfScreenWidth/2 +8.dp, bottom = 22.dp)
+                .clip(RoundedCornerShape(16.dp))
+        ) {
             item {
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
-                        .background(Color.DarkGray)
+                        .size(65.dp)
+                        .background(appbarColor)
 
                 ) {
                     Column(
@@ -816,11 +839,10 @@ fun Basic(navController: NavController){
 
 
             item {
-
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
-                        .background(Color.DarkGray)
+                        .size(65.dp)
+                        .background(appbarColor)
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -846,13 +868,12 @@ fun Basic(navController: NavController){
                 }
             }
 
-
             item {
 
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
-                        .background(Color.DarkGray)
+                        .size(65.dp)
+                        .background(appbarColor)
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom,
@@ -874,13 +895,15 @@ fun Basic(navController: NavController){
                             modifier = Modifier.padding(5.dp) // Add padding at the bottom
                         )
                     }
+
                 }
             }
-
-
         }
     }
 }
+
+
+
 @Composable
 fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
