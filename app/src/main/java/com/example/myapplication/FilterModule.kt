@@ -164,9 +164,9 @@ class FilterModule : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 8.dp), // Space above the button
-                                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Blue)
+                                colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray) // Dark themed background
                             ) {
-                                Text("Close", color = Color.White)
+                                Text("Close", color = Color.White) // White text
                             }
                         }
                     }
@@ -223,7 +223,7 @@ class FilterModule : ComponentActivity() {
                 LazyRow(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = halfScreenWidth/2 +28.dp, bottom = 13.dp)
+                    modifier = Modifier.padding(start = halfScreenWidth/2 +24.25.dp, bottom = 13.dp)
                 ) {
                     //Cancel Button
                     item {
