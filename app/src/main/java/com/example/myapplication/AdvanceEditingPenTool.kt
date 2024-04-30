@@ -55,7 +55,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
+import androidx.compose.material.SliderDefaults
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.widget.CommonAppBar
@@ -94,36 +98,176 @@ class AdvanceEditingPenTool : ComponentActivity() {
                     var drawPath: DrawBoxPayLoad? by remember { mutableStateOf(null) }
                     var sourceImgBitmap: Bitmap by remember { mutableStateOf(sourceBitmap) }
                     var isResized: Boolean by remember { mutableStateOf(false) }
+                    var isSelectingColor: Boolean by remember { mutableStateOf(false) }
 
-                    val context: Context = LocalContext.current
-
-//                    val displayMetrics = context.resources.displayMetrics
                     var maxWidth: Int = 350
-                    var maxHeight: Int = 400
+                    var maxHeight: Int = 450
                     var screenWidth: Int by remember{ mutableStateOf(maxWidth)}  //displayMetrics.widthPixels
                     var screenHeight: Int by remember{ mutableStateOf(maxHeight) } //displayMetrics.heightPixels
 
-                    val done = painterResource(R.drawable.baseline_check_24)
-                    val cancel = painterResource(R.drawable.cancel_button)
+                    val done = painterResource(R.drawable.editcheck)
+                    val cancel = painterResource(R.drawable.editcancel)
+                    val color_picker = painterResource(R.drawable.baseline_color_lens_24)
+
+                    val gradientcolors = listOf(
+                        Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(bgColor)
+                    )
 
                     Column(
                         modifier = Modifier
                             .fillMaxHeight()
                             .fillMaxWidth()
-                            .background(Color.Gray),
-
-                        verticalArrangement = Arrangement.Top,
+                            .background(brush = Brush.verticalGradient(gradientcolors)),
+                        verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        val width = if (!isResized) maxWidth else sourceImgBitmap.width.toFloat().pxToDp().toInt()
+                        val height = if (!isResized) maxHeight else sourceImgBitmap.height.toFloat().pxToDp().toInt()
 
-                        CommonAppBar(title = "Pen Tool")
+                        if(!isResized) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 8.dp, end = 8.dp)
+                                    .height(
+                                        height.dp
+                                    )
+                                    .clipToBounds()
+                                    .drawWithContent {
+                                        drawContent()
+                                        if (!isResized) {
+                                            screenWidth = size.width.toInt()
+                                            screenHeight = size.height.toInt()
+                                            sourceImgBitmap = resizeBitmapWithAspectRatio(
+                                                sourceImgBitmap,
+                                                size.width.toInt(),
+                                                size.height.toInt()
+                                            )
+                                            isResized = true
+                                        }
+                                        drawImage(
+                                            image = sourceImgBitmap.asImageBitmap()
+                                        )
+
+                                        drawPath?.let { drawPath ->
+                                            for (pathLines in drawPath.path) {
+                                                drawPoints(
+                                                    points = pathLines.points,
+                                                    pointMode = PointMode.Polygon,
+                                                    color = penColor,
+                                                    strokeWidth = penSize
+                                                )
+                                            }
+                                        }
+                                    }
+                            ) {
+                                val controller = rememberDrawController()
+
+                                DrawBox(drawController = controller,
+                                    modifier = Modifier
+                                        .width(
+                                            sourceImgBitmap.width
+                                                .toFloat()
+                                                .pxToDp().dp
+                                        )
+                                        .height(
+                                            sourceImgBitmap.height
+                                                .toFloat()
+                                                .pxToDp().dp
+                                        )
+                                        .clipToBounds(),
+                                    bitmapCallback = { imageBitmap, error ->
+                                        imageBitmap?.let {
+//                                save(it.asAndroidBitmap())
+                                        }
+
+                                    }) { undoCount, redoCount ->
+
+                                    sizeBarVisitbility = false
+                                    colorBarVisitbility = false
+                                    redoVisitbility = redoCount != 0
+                                    drawPath = controller.exportPath()
+                                }
+
+                                sourceImgBitmap =
+                                    modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)
+
+                            }
+                        }
+                        else {
+                            Box(
+                                modifier = Modifier
+                                    .width(width.dp)
+                                    .height(height.dp)
+                                    .clipToBounds()
+                                    .drawWithContent {
+                                        drawContent()
+                                        if (!isResized) {
+                                            screenWidth = size.width.toInt()
+                                            screenHeight = size.height.toInt()
+                                            sourceImgBitmap = resizeBitmapWithAspectRatio(
+                                                sourceImgBitmap,
+                                                size.width.toInt(),
+                                                size.height.toInt()
+                                            )
+                                            isResized = true
+                                        }
+                                        drawImage(
+                                            image = sourceImgBitmap.asImageBitmap()
+                                        )
+
+                                        drawPath?.let { drawPath ->
+                                            for (pathLines in drawPath.path) {
+                                                drawPoints(
+                                                    points = pathLines.points,
+                                                    pointMode = PointMode.Polygon,
+                                                    color = penColor,
+                                                    strokeWidth = penSize
+                                                )
+                                            }
+                                        }
+                                    }
+                            ) {
+                                val controller = rememberDrawController()
+
+                                DrawBox(drawController = controller,
+                                    modifier = Modifier
+                                        .width(
+                                            sourceImgBitmap.width
+                                                .toFloat()
+                                                .pxToDp().dp
+                                        )
+                                        .height(
+                                            sourceImgBitmap.height
+                                                .toFloat()
+                                                .pxToDp().dp
+                                        )
+                                        .clipToBounds(),
+                                    bitmapCallback = { imageBitmap, error ->
+                                        imageBitmap?.let {
+//                                save(it.asAndroidBitmap())
+                                        }
+
+                                    }) { undoCount, redoCount ->
+
+                                    sizeBarVisitbility = false
+                                    colorBarVisitbility = false
+                                    redoVisitbility = redoCount != 0
+                                    drawPath = controller.exportPath()
+                                }
+
+                                sourceImgBitmap =
+                                    modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)
+
+                            }
+                        }
                         Row(modifier = Modifier.height(184.dp)) {
-                            HarmonyColorPicker(harmonyMode = ColorHarmonyMode.SHADES,
-                                modifier = Modifier.size(184.dp),
-                                onColorChanged = { color ->
-                                    penColor = color.toColor()
-                                })
-
                             Column(
                                 modifier = Modifier
                                     .padding(16.dp)
@@ -139,100 +283,39 @@ class AdvanceEditingPenTool : ComponentActivity() {
                                             sourceImgBitmap, screenWidth, screenHeight
                                         )
                                     }, valueRange = 1f..30f, // Define the range of float values
-                                    steps = 50 // Optional: Define the number of steps in the range
+                                    steps = 50, // Optional: Define the number of steps in the range
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = appbarColor, // Set the color of the thumb
+                                        activeTrackColor = appbarColor, // Set the color of the active track
+                                        inactiveTrackColor = Color.White // Set the color of the inactive track
+                                    )
                                 )
-                                Text("Pen Size: ${penSize.roundToInt()}")
+                                Text("Pen Size: ${penSize.roundToInt()}",
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        val width = if (!isResized) maxWidth else sourceImgBitmap.width.toFloat().pxToDp().toInt()
-                        val height = if (!isResized) maxHeight else sourceImgBitmap.height.toFloat().pxToDp().toInt()
-                        Box(
-                            modifier = Modifier
-                                .width(
-                                    width.dp
-                                )
-                                .height(
-                                    height.dp
-                                )
-                                .background(Color.Red)
-                                .clipToBounds()
-                                .drawWithContent {
-                                    drawContent()
-                                    if (!isResized) {
-                                        screenWidth = size.width.toInt()
-                                        screenHeight = size.height.toInt()
-                                        sourceImgBitmap = resizeBitmapWithAspectRatio(
-                                            sourceImgBitmap, size.width.toInt(), size.height.toInt()
-                                        )
-                                        isResized = true
-                                    }
-                                    drawImage(
-                                        image = sourceImgBitmap.asImageBitmap()
-                                    )
-
-                                    drawPath?.let { drawPath ->
-                                        for (pathLines in drawPath.path) {
-                                            drawPoints(
-                                                points = pathLines.points,
-                                                pointMode = PointMode.Polygon,
-                                                color = penColor,
-                                                strokeWidth = penSize
-                                            )
-                                        }
-                                    }
-                                }
-                        ) {
-                            val controller = rememberDrawController()
-
-                            DrawBox(drawController = controller,
-                                modifier = Modifier
-                                    .width(
-                                        sourceImgBitmap.width
-                                            .toFloat()
-                                            .pxToDp().dp
-                                    )
-                                    .height(
-                                        sourceImgBitmap.height
-                                            .toFloat()
-                                            .pxToDp().dp
-                                    )
-                                    .clipToBounds(),
-                                bitmapCallback = { imageBitmap, error ->
-                                    imageBitmap?.let {
-//                                save(it.asAndroidBitmap())
-                                    }
-
-                                }) { undoCount, redoCount ->
-
-                                sizeBarVisitbility = false
-                                colorBarVisitbility = false
-                                redoVisitbility = redoCount != 0
-                                drawPath = controller.exportPath()
-                            }
-
-                            sourceImgBitmap =
-                                modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)
-
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
                         LazyRow(
-                            horizontalArrangement = Arrangement.SpaceAround,
+                            horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.Bottom,
                             modifier = Modifier
                                 .padding(18.dp)
-                                .fillMaxWidth()
+                                .padding(bottom = 10.dp)
+                                .clip(
+                                    RoundedCornerShape(8.dp)
+                                )
                         ) {
 
                             item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                                 Box(
                                     modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable { finalImage = sourceBitmap }
+                                        .size(60.dp)
+                                        .background(appbarColor)
+                                        .clickable {
+                                            if(!isSelectingColor)
+                                                finalImage = sourceBitmap
+                                        }
                                 ) {
                                     Column(
                                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -247,28 +330,57 @@ class AdvanceEditingPenTool : ComponentActivity() {
                                         )
                                         Text(
                                             text = "Cancel",
-                                            color = Color.Black,
+                                            color = Color.White,
                                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                                             textAlign = TextAlign.Justify,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                            modifier = Modifier.padding(5.dp)
                                         )
                                     }
                                 }
                             }
 
                             item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                                 Box(
                                     modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable { finalImage = sourceImgBitmap }
+                                        .height(60.dp)
+                                        .width(80.dp)
+                                        .background(appbarColor)
+                                        .clickable { isSelectingColor = true }
                                 ) {
                                     Column(
                                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.size(28.dp),
+                                            painter = color_picker,
+                                            contentDescription = null,
+                                            tint = penColor
+                                        )
+                                        Text(
+                                            text = "Change Color",
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            textAlign = TextAlign.Justify,
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .background(appbarColor)
+                                        .clickable {
+                                            if(!isSelectingColor)
+                                                finalImage = sourceImgBitmap
+                                        }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom,
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier.fillMaxSize()
                                     ) {
@@ -277,20 +389,59 @@ class AdvanceEditingPenTool : ComponentActivity() {
                                             contentDescription = "Your Icon Description",
                                             modifier = Modifier
                                                 .size(28.dp)
+
                                         )
                                         Text(
                                             text = "Done",
-                                            color = Color.Black,
+                                            color = Color.White,
                                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                                             textAlign = TextAlign.Justify,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                            modifier = Modifier.padding(5.dp)
                                         )
                                     }
                                 }
                             }
+
                         }
                     }
+
+                    if(isSelectingColor) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(0.7f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            HarmonyColorPicker(harmonyMode = ColorHarmonyMode.SHADES,
+                                modifier = Modifier.size(200.dp),
+                                onColorChanged = { color ->
+                                    penColor = color.toColor()
+                                })
+                        }
+                        Box( modifier = Modifier
+                            .fillMaxSize().padding(top = 80.dp, end = 20.dp),
+                        contentAlignment = Alignment.TopEnd)
+                        {
+                            Row(
+                                modifier = Modifier
+                                    .background(
+                                        color = appbarColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .clickable(onClick = { isSelectingColor = false }),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Done",
+                                    color = Color.White,
+                                    fontSize = 19.sp
+                                )
+                            }
+                        }
+                    }
+
+                    CommonAppBar(title = "Pen Tool")
                 }
             }
         }
