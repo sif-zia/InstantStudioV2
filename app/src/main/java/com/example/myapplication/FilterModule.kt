@@ -1,3 +1,4 @@
+
 package com.example.myapplication
 
 import android.content.Intent
@@ -70,6 +71,7 @@ import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Surface
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.myapplication.widget.CommonAppBar
@@ -208,18 +210,21 @@ class FilterModule : ComponentActivity() {
                     }
                 }
             }
+
             Column(
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.Start
             ) {
-                Spacer(modifier = Modifier.weight(0.2f))
+               // Spacer(modifier = Modifier.weight(0.2f).width(200.dp))
+                 val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+                 val halfScreenWidth = (screenWidth / 2)
+                 Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
                 //First row, where cancel and done buttons should be
                 LazyRow(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 120.dp, bottom = 13.dp)
+                    modifier = Modifier.padding(start = halfScreenWidth/2 +28.dp, bottom = 13.dp)
                 ) {
-
                     //Cancel Button
                     item {
                         Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
@@ -313,20 +318,20 @@ class FilterModule : ComponentActivity() {
                         }
                     }
                 }
+
                 //Second row, where the 4 buttons, undo,autoapply, filters , reset button will be
                 LazyRow(
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 30.dp, bottom = 15.dp)
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp)
+                        .clip(RoundedCornerShape(15.dp)).align(Alignment.CenterHorizontally)
                 ) {
+
                     item {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                         Box(
                             modifier = Modifier
-                                .size(70.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
+                                .size(60.dp)
+                                .background(Color.DarkGray)
                                 .clickable {
                                     if(allowDoubleUndo) {
                                         currentFilter=undoFilter(filterStack)
@@ -349,7 +354,7 @@ class FilterModule : ComponentActivity() {
                                 )
                                 Text(
                                     text = "Undo",
-                                    color = Color.Black,
+                                    color = Color.White,
                                     fontSize = 10.sp,
 //                            fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Justify,
@@ -359,15 +364,11 @@ class FilterModule : ComponentActivity() {
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                         Box(
                             modifier = Modifier
-                                .size(70.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
+                                .size(60.dp)
+                                .background(Color.DarkGray)
                                 .clickable {
-                                    System.out.println("Nignog")
                                     val inputStream =
                                         context.contentResolver.openInputStream(com.example.myapplication.imageUri!!)
                                     val bitmap = BitmapFactory.decodeStream(inputStream)
@@ -420,25 +421,24 @@ class FilterModule : ComponentActivity() {
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
                                         .size(20.dp)
+
                                 )
                                 Text(
-                                    text = "Auto Apply",
-                                    color = Color.Black,
+                                    text = "Auto",
+                                    color = Color.White,
                                     fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Justify,
-                                    modifier = Modifier.padding(5.dp)
+                                    modifier = Modifier.padding(5.dp) // Add padding at the bottom
                                 )
                             }
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                         Box(
                             modifier = Modifier
-                                .size(70.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
+                                .size(60.dp)
+                                .background(Color.DarkGray)
                                 .clickable {
                                     showDialog = true
                                 }
@@ -453,25 +453,24 @@ class FilterModule : ComponentActivity() {
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
                                         .size(20.dp)
+
                                 )
                                 Text(
                                     text = "Filters",
-                                    color = Color.Black,
+                                    color = Color.White,
                                     fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Justify,
-                                    modifier = Modifier.padding(5.dp)
+                                    modifier = Modifier.padding(5.dp) // Add padding at the bottom
                                 )
                             }
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                         Box(
                             modifier = Modifier
-                                .size(70.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
+                                .size(60.dp)
+                                .background(Color.DarkGray)
                                 .clickable {
                                     currentFilter = null
                                 }
@@ -490,7 +489,7 @@ class FilterModule : ComponentActivity() {
                                 )
                                 Text(
                                     text = "Reset",
-                                    color = Color.Black,
+                                    color = Color.White,
                                     fontSize = 10.sp,
 //                            fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Justify,
@@ -811,5 +810,5 @@ fun undoFilter(filterStack: MutableList<Int?>) :Int?{
         currentFilter = null
     }
     return currentFilter
-}
 
+}
