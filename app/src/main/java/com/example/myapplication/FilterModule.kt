@@ -84,7 +84,6 @@ class FilterModule : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var imageUri: Uri? = intent?.getParcelableExtra("imageUri")
-        var tempImageUri:Uri? = intent?.getParcelableExtra("imageUri")
         setContent{
             val context = LocalContext.current
             val filterStack = remember { mutableListOf<Int?>() }
@@ -99,8 +98,7 @@ class FilterModule : ComponentActivity() {
             val undoicon = painterResource(R.drawable.undoicon)
             val reseticon = painterResource(R.drawable.reseticon)
             val autoapplyicon = painterResource(R.drawable.autoapply)
-            val cancel_image = painterResource(R.drawable.cancel_button)
-            val done_image = painterResource(R.drawable.baseline_check_24)
+            val done_image = painterResource(R.drawable.editcheck)
             val gradientcolors = listOf(
                 Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
             )
@@ -114,13 +112,15 @@ class FilterModule : ComponentActivity() {
                     // The outermost container defines the dialog's background color and shape
                     Surface(
                         shape = MaterialTheme.shapes.medium,
-                        color = Color.Black
+                        color =  appbarColor
                     ) {
                         Column(
+
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp) // Padding around column content
                                 .heightIn(max = 400.dp) // Set a maximum height to limit the dialog size
+
                         ) {
                             // Scrollable list of filters
                             LazyColumn(
@@ -136,15 +136,17 @@ class FilterModule : ComponentActivity() {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .background(bgColor)
                                             .clickable {
                                                 currentFilter = index + 1
                                                 filterStack.add(currentFilter)
                                                 allowDoubleUndo = true
                                                 showDialog = false
                                             }
-                                            .background(Color.DarkGray)
                                             .padding(8.dp),
+
                                         verticalAlignment = Alignment.CenterVertically
+
                                     ) {
                                         Image(
                                             painter = filterImage,
@@ -153,12 +155,14 @@ class FilterModule : ComponentActivity() {
                                                 .size(40.dp)
                                                 .padding(end = 8.dp),
                                             contentScale = ContentScale.Crop
+
                                         )
                                         Text(
                                             text = filterName,
                                             color = Color.White,
                                             fontSize = 16.sp,
                                             modifier = Modifier.weight(1f)
+
                                         )
                                     }
 
@@ -171,7 +175,7 @@ class FilterModule : ComponentActivity() {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 8.dp), // Space above the button
-                                colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray) // Dark themed background
+                                colors = ButtonDefaults.buttonColors(backgroundColor = bgColor)
                             ) {
                                 Text("Close", color = Color.White) // White text
                             }
@@ -191,8 +195,7 @@ class FilterModule : ComponentActivity() {
             Box(modifier = Modifier.fillMaxSize().background(brush = Brush.verticalGradient(gradientcolors))) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp), // Add vertical scroll
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.Top, // Align the content at the top
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -201,10 +204,9 @@ class FilterModule : ComponentActivity() {
                             bitmap = bitmap.asImageBitmap(),
                             contentDescription = null,
                             modifier = Modifier
+                                .padding(top = 84.dp)
                                 .fillMaxWidth()
-                                .padding(16.dp)
-                                .padding(top = 100.dp)
-                                .height(500.dp)
+                                .fillMaxHeight(0.8f)
                         )
                     }
                     imageUri?.let { uri->
@@ -221,111 +223,11 @@ class FilterModule : ComponentActivity() {
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.Start
             ) {
-               // Spacer(modifier = Modifier.weight(0.2f).width(200.dp))
+                 // Spacer(modifier = Modifier.weight(0.2f).width(200.dp))
                  val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                  val halfScreenWidth = (screenWidth / 2)
                  Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
-                //First row, where cancel and done buttons should be
-                LazyRow(
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = halfScreenWidth/2 +24.25.dp, bottom = 13.dp)
-                ) {
-                    //Cancel Button
-                    item {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
-                                .clickable {
-                                    bitmapState.value?.let {
-                                        if (it != null) {
-                                            imageUri = getImageUri(context, it)
-                                            val resultIntent = Intent().apply {
-                                                putExtra("filterImageUri", tempImageUri)
-                                            }
-                                            setResult(RESULT_OK, resultIntent)
-                                            finish()
-                                        } else {
-                                            Log.e("Filters", "Bitmap is null, cannot navigate to EditingScreen")
-                                        }
-                                    }
-                                }
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Image(
-                                    painter = cancel_image,
-                                    contentDescription = "Your Icon Description",
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                )
-                                Text(
-                                    text = "Cancel",
-                                    color = Color.Black,
-                                    fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Justify,
-                                    modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                )
-                            }
-                        }
-                    }
-                    //Proceed/Done button
-                    item {
-                        Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
-                                .clickable {
-                                    bitmapState.value?.let {
-                                        if (it != null) {
-                                            imageUri = getImageUri(context, it)
-                                            val resultIntent = Intent().apply {
-                                                putExtra("filterImageUri", imageUri)
-                                            }
-                                            setResult(RESULT_OK, resultIntent)
-                                            finish()
-                                        } else {
-                                            Log.e("Filters", "Bitmap is null, cannot navigate to EditingScreen")
-                                        }
-                                    }
-                                }
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Image(
-                                    painter = done_image,
-                                    contentDescription = "Your Icon Description",
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                )
-                                Text(
-                                    text = "Done",
-                                    color = Color.Black,
-                                    fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Justify,
-                                    modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                )
-                            }
-                        }
-                    }
-                }
-
-                //Second row, where the 4 buttons, undo,autoapply, filters , reset button will be
+                //Button row, where the 5 buttons, undo,autoapply, filters , reset button, done will be
                 LazyRow(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.Bottom,
@@ -503,7 +405,49 @@ class FilterModule : ComponentActivity() {
                             }
                         }
                     }
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .background(appbarColor)
+                                .clickable {
+                                    bitmapState.value?.let {
+                                        if (it != null) {
+                                            imageUri = getImageUri(context, it)
+                                            val resultIntent = Intent().apply {
+                                                putExtra("filterImageUri", imageUri)
+                                            }
+                                            setResult(RESULT_OK, resultIntent)
+                                            finish()
+                                        } else {
+                                            Log.e("Filters", "Bitmap is null, cannot navigate to EditingScreen")
+                                        }
+                                    }
+                                }
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Image(
+                                    painter = done_image,
+                                    contentDescription = "Your Icon Description",
+                                    modifier = Modifier
+                                        .size(23.dp)
 
+                                )
+                                Text(
+                                    text = "Done",
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Justify,
+                                    modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
