@@ -461,7 +461,7 @@ class ForegroundModule : ComponentActivity() {
                                         .size(28.dp)
                                 )
                                 Text(
-                                    text = "Apply Color",
+                                    text = "Cancel",
                                     color = Color.White,
                                     fontSize = 10.sp,
                                     textAlign = TextAlign.Justify,
@@ -481,7 +481,7 @@ class ForegroundModule : ComponentActivity() {
                                 .background(appbarColor)
                                 .clickable  {
                                     val resultIntent = Intent().apply {
-                                        putExtra("bgImageUri", imageUri)
+                                        putExtra("fgImageUri", imageUri)
                                     }
                                     setResult(ComponentActivity.RESULT_OK, resultIntent)
                                     finish()
@@ -499,7 +499,7 @@ class ForegroundModule : ComponentActivity() {
                                         .size(28.dp)
                                 )
                                 Text(
-                                    text = "Color Picker",
+                                    text = "Done",
                                     color = Color.White,
                                     fontSize = 10.sp,
                                     textAlign = TextAlign.Justify,

@@ -380,50 +380,7 @@ class BackgroundModule : ComponentActivity() {
                 // Other content goes here
 
                 // Place the LazyRow just above the bottom of the screen
-                LazyRow(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter) // Align to the bottom
-                        .padding(start = 0.dp, bottom = 16.dp), // Add padding to leave space from the bottom
-                    horizontalArrangement = Arrangement.Center // Center align the items horizontally
-                ) {
 
-                    item {
-                        Spacer(modifier = Modifier.width(15.dp)) // Add space between buttons
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(bgColor)
-                                .padding(4.dp)
-                                .clickable {
-                                    onConfirmation(false)
-                                }
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Image(
-                                    painter = cancel_image,
-                                    contentDescription = "Your Icon Description",
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                )
-                                Text(
-                                    text = "Cancel",
-                                    color = Color.Black,
-                                    fontSize = 10.sp,
-                                    textAlign = TextAlign.Justify,
-                                    modifier = Modifier.padding(5.dp)
-                                )
-                            }
-                        }
-
-                    }
-
-
-                }
             }
 
             Column(
@@ -463,7 +420,7 @@ class BackgroundModule : ComponentActivity() {
                                             .size(28.dp)
                                     )
                                     Text(
-                                        text = "Apply Color",
+                                        text = "Cancel",
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Justify,
@@ -501,7 +458,7 @@ class BackgroundModule : ComponentActivity() {
                                             .size(28.dp)
                                     )
                                     Text(
-                                        text = "Color Picker",
+                                        text = "Done",
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Justify,
