@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.util.DisplayMetrics
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -92,18 +93,19 @@ class AdvanceEditingPenTool : ComponentActivity() {
                     var penSize by remember { mutableStateOf(1f) }
                     var drawPath: DrawBoxPayLoad? by remember { mutableStateOf(null) }
                     var sourceImgBitmap: Bitmap by remember { mutableStateOf(sourceBitmap) }
+                    var isResized: Boolean by remember { mutableStateOf(false) }
 
                     val context: Context = LocalContext.current
-                    val displayMetrics = context.resources.displayMetrics
 
-                    var screenWidth: Int by remember{ mutableStateOf(displayMetrics.widthPixels)}
-                    var screenHeight: Int by remember{ mutableStateOf(displayMetrics.heightPixels) }
+//                    val displayMetrics = context.resources.displayMetrics
+                    var maxWidth: Int = 350
+                    var maxHeight: Int = 400
+                    var screenWidth: Int by remember{ mutableStateOf(maxWidth)}  //displayMetrics.widthPixels
+                    var screenHeight: Int by remember{ mutableStateOf(maxHeight) } //displayMetrics.heightPixels
 
                     val done = painterResource(R.drawable.baseline_check_24)
                     val cancel = painterResource(R.drawable.cancel_button)
 
-                    val backgroundImage: Painter = painterResource(id = R.drawable.b1)
-                    
                     Column(
                         modifier = Modifier
                             .fillMaxHeight()
@@ -132,9 +134,10 @@ class AdvanceEditingPenTool : ComponentActivity() {
                                 Slider(
                                     value = penSize, onValueChange = {
                                         penSize = it
-                                        if (imageUri != null) {
-                                            sourceImgBitmap = sourceBitmap
-                                        }
+                                        sourceImgBitmap = sourceBitmap
+                                        sourceImgBitmap = resizeBitmapWithAspectRatio(
+                                            sourceImgBitmap, screenWidth, screenHeight
+                                        )
                                     }, valueRange = 1f..30f, // Define the range of float values
                                     steps = 50 // Optional: Define the number of steps in the range
                                 )
@@ -142,76 +145,73 @@ class AdvanceEditingPenTool : ComponentActivity() {
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
+                        val width = if (!isResized) maxWidth else sourceImgBitmap.width.toFloat().pxToDp().toInt()
+                        val height = if (!isResized) maxHeight else sourceImgBitmap.height.toFloat().pxToDp().toInt()
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .weight(1f, fill = false)
+                                .width(
+                                    width.dp
+                                )
+                                .height(
+                                    height.dp
+                                )
+                                .background(Color.Red)
+                                .clipToBounds()
                                 .drawWithContent {
-                                    screenWidth = size.width.toInt()
-                                    screenHeight = size.height.toInt()
                                     drawContent()
-                                },
-                            contentAlignment = Alignment.Center
+                                    if (!isResized) {
+                                        screenWidth = size.width.toInt()
+                                        screenHeight = size.height.toInt()
+                                        sourceImgBitmap = resizeBitmapWithAspectRatio(
+                                            sourceImgBitmap, size.width.toInt(), size.height.toInt()
+                                        )
+                                        isResized = true
+                                    }
+                                    drawImage(
+                                        image = sourceImgBitmap.asImageBitmap()
+                                    )
+
+                                    drawPath?.let { drawPath ->
+                                        for (pathLines in drawPath.path) {
+                                            drawPoints(
+                                                points = pathLines.points,
+                                                pointMode = PointMode.Polygon,
+                                                color = penColor,
+                                                strokeWidth = penSize
+                                            )
+                                        }
+                                    }
+                                }
                         ) {
-//                controller.changeBgColor(Color.Transparent)
-                            val h: Float = sourceImgBitmap.height.toFloat()
-                            val w: Float = sourceImgBitmap.width.toFloat()
-                            val (scaledWidth, scaledHeight) = calculateScaledDimensions(
-                                w, h, screenWidth, screenHeight
-                            )
-                            var imageWidth: Int = scaledWidth.toInt()
-                            var imageHeight: Int = scaledHeight.toInt()
                             val controller = rememberDrawController()
 
 
-                            DrawBox(drawController = controller,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .aspectRatio(imageWidth.toFloat() / imageHeight.toFloat())
-                                    .clipToBounds(),
-                                bitmapCallback = { imageBitmap, error ->
-                                    imageBitmap?.let {
-//                                save(it.asAndroidBitmap())
-                                    }
-
-                                }) { undoCount, redoCount ->
-
-                                sizeBarVisitbility = false
-                                colorBarVisitbility = false
-                                redoVisitbility = redoCount != 0
-                                drawPath = controller.exportPath()
-                            }
-
-                            Canvas(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .aspectRatio(imageWidth.toFloat() / imageHeight.toFloat())
-                                    .clipToBounds()
-                            ) {
-                                val canvasWidth = size.width.toInt()
-                                val canvasHeight = size.height.toInt()
-
-                                drawImage(
-                                    image = sourceImgBitmap.asImageBitmap(),
-                                    dstSize = IntSize(canvasWidth, canvasHeight)
-                                )
-
-                                drawPath?.let { drawPath ->
-                                    for (pathLines in drawPath.path) {
-                                        drawPoints(
-                                            points = pathLines.points,
-                                            pointMode = PointMode.Polygon,
-                                            color = penColor,
-                                            strokeWidth = penSize
+                                DrawBox(drawController = controller,
+                                    modifier = Modifier
+                                        .width(
+                                            sourceImgBitmap.width
+                                                .toFloat()
+                                                .pxToDp().dp
                                         )
-                                    }
-                                }
-                            }
+                                        .height(
+                                            sourceImgBitmap.height
+                                                .toFloat()
+                                                .pxToDp().dp
+                                        )
+                                        .clipToBounds(),
+                                    bitmapCallback = { imageBitmap, error ->
+                                        imageBitmap?.let {
+//                                save(it.asAndroidBitmap())
+                                        }
 
-                            sourceImgBitmap = resizeBitmapWithAspectRatio(
-                                sourceImgBitmap, imageWidth, imageHeight
-                            )
+                                    }) { undoCount, redoCount ->
+
+                                    sizeBarVisitbility = false
+                                    colorBarVisitbility = false
+                                    redoVisitbility = redoCount != 0
+                                    drawPath = controller.exportPath()
+                                }
+
                             sourceImgBitmap =
                                 modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)
 
@@ -297,3 +297,7 @@ class AdvanceEditingPenTool : ComponentActivity() {
         }
     }
 }
+
+@Composable
+fun Float.pxToDp(): Float = (this / (LocalContext.current.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
+private fun Int.dpToPx(context: Context): Float = (this * context.resources.displayMetrics.density)
