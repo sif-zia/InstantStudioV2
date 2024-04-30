@@ -1231,7 +1231,7 @@ fun getImageUri(inContext: Context, inImage: Bitmap): Uri {
 @Composable
 fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: SharedViewModel) {
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
-    val bright = painterResource(R.drawable.brightness)
+    val bright = painterResource(R.drawable.sat)
     val crop = painterResource(R.drawable.crop)
     val fgc = painterResource(R.drawable.fgc)
     val bgc = painterResource(R.drawable.bgc)
@@ -1331,7 +1331,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                         )
                         Text(
                             text = "Light",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
