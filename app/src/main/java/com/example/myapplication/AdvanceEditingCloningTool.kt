@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
@@ -39,6 +40,25 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.SliderDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.example.myapplication.widget.bitmapToUri
 import com.example.myapplication.widget.AdvancedEditingWidgets.calculateScaledDimensions
@@ -46,6 +66,8 @@ import com.example.myapplication.widget.AdvancedEditingWidgets.cropImage
 import com.example.myapplication.widget.AdvancedEditingWidgets.resizeBitmapWithAspectRatio
 import com.example.myapplication.widget.AdvancedEditingWidgets.pasteBitmapOverAnother
 import com.example.myapplication.widget.AdvancedEditingWidgets.uriToBitmap
+import com.example.myapplication.widget.CommonAppBar
+import java.io.ByteArrayOutputStream
 
 class AdvanceEditingCloningTool : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,37 +101,52 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                     var pasteCoordinates by remember { mutableStateOf(Offset.Unspecified) }
                     var croppedBitmap by remember { mutableStateOf(Bitmap.createBitmap(selectionSize.toInt(), selectionSize.toInt(), Bitmap.Config.ARGB_8888)) }
 
+                    val done = painterResource(R.drawable.baseline_check_24)
+                    val cancel = painterResource(R.drawable.cancel_button)
+                    val clone = painterResource(R.drawable.clone)
+                    val select = painterResource(R.drawable.crop2)
+                    val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
+
                     Column(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Gray),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                        CommonAppBar(title = "Cloning Tool")
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .height(168.dp),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Button(onClick = { isSelecting = !isSelecting; pasteCoordinates = Offset.Unspecified }) {
-                                if (isSelecting)
-                                    Text("Mode: Select")
-                                else
-                                    Text("Mode: Clone")
-                            }
+                            Slider(
+                                value = selectionSize,
+                                onValueChange = {
+                                    selectionSize = it
+                                },
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color.DarkGray.copy(0.8f), // Set the thumb color
+                                    activeTrackColor = Color.DarkGray.copy(0.8f), // Set the track color
+                                    inactiveTrackColor = Color.LightGray.copy(0.5f) // Set the track color when slider is inactive
+                                ),
+                                valueRange = 15f..50f, // Define the range of float values
+                                steps = 50 // Optional: Define the number of steps in the range
+                            )
+                            Text("Selection Size: ${selectionSize.roundToInt()}",
+                                fontFamily = merriFont
+                                )
 
-                            Button(onClick = {
-                                Log.d("Done Pressed", "Final Image Bitmap Changed 1")
-                                val returnedUri = bitmapToUri(context, sourceImgBitmap.asImageBitmap())
 
-                                val resultIntent = Intent().apply {
-                                    putExtra("editedImageUri", returnedUri)
-                                }
-                                setResult(Activity.RESULT_OK, resultIntent)
-                                finish()
-                            }) {
-                                Text("Done")
-                            }
+                            CustomButton(text = "Reset Selection", onClick = { pasteCoordinates = Offset.Unspecified })
+
+
+//                            Button(onClick = { pasteCoordinates = Offset.Unspecified }) {
+//                                Text("Reset Selection")
+//                            }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-
                         Box(modifier = Modifier
                             .weight(1f, fill = false)
                             .fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -186,33 +223,186 @@ class AdvanceEditingCloningTool : ComponentActivity() {
 
 
                         }
-
                         Spacer(modifier = Modifier.height(16.dp))
-                        Column(
+                        LazyRow(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.Bottom,
                             modifier = Modifier
-                                .padding(16.dp)
-                                .height(168.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .padding(18.dp)
+                                .fillMaxWidth()
                         ) {
-                            Slider(
-                                value = selectionSize,
-                                onValueChange = {
-                                    selectionSize = it
-                                },
-                                valueRange = 15f..50f, // Define the range of float values
-                                steps = 50 // Optional: Define the number of steps in the range
-                            )
-                            Text("Selection Size: ${selectionSize.roundToInt()}")
 
-                            Button(onClick = { pasteCoordinates = Offset.Unspecified }) {
-                                Text("Reset Selection")
+                            item {
+                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray.copy(0.5f))
+                                        .padding(4.dp)
+                                        .clickable {
+                                            val resultIntent = Intent().apply {
+                                                putExtra("editedImageUri", imageUri)
+                                            }
+                                            setResult(Activity.RESULT_OK, resultIntent)
+                                            finish()
+                                        }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = cancel,
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Cancel",
+                                            color = Color.Black,
+                                            fontSize = 10.sp,
+                                            textAlign = TextAlign.Justify,
+                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        )
+                                    }
+                                }
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray.copy(0.5f))
+                                        .padding(4.dp)
+                                        .clickable {
+                                            isSelecting = !isSelecting
+                                            pasteCoordinates = Offset.Unspecified
+                                        }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        if(isSelecting) {
+                                            Image(
+                                                painter = clone,
+                                                contentDescription = "Your Icon Description",
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                            )
+                                            Text(
+                                                text = "Clone",
+                                                color = Color.Black,
+                                                fontSize = 10.sp,
+                                                //                            fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.Justify,
+                                                modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                            )
+                                        }
+                                        else {
+                                            Image(
+                                                painter = select,
+                                                contentDescription = "Your Icon Description",
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                            )
+                                            Text(
+                                                text = "Select",
+                                                color = Color.Black,
+                                                fontSize = 10.sp,
+                                                //                            fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.Justify,
+                                                modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray.copy(0.5f))
+                                        .padding(4.dp)
+                                        .clickable {
+                                            val returnedUri = bitmapToUri(
+                                                context,
+                                                sourceImgBitmap.asImageBitmap()
+                                            )
+
+                                            val resultIntent = Intent().apply {
+                                                putExtra("editedImageUri", returnedUri)
+                                            }
+                                            setResult(Activity.RESULT_OK, resultIntent)
+                                            finish()
+                                        }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = done,
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Done",
+                                            color = Color.Black,
+                                            fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Justify,
+                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        )
+                                    }
+                                }
                             }
                         }
-
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun CustomButton(text: String, onClick: () -> Unit) {
+    val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
+
+    Row(
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .padding(15.dp)
+    ) {
+
+        TextButton(
+            onClick = onClick,
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(50))
+                .background(Color.LightGray.copy(0.5f))
+        ) {
+            Text(
+                text = text,
+                color = Color.Black,
+                fontSize = 15.sp,
+                fontFamily = merriFont,
+                fontWeight = FontWeight.Thin,
+                fontStyle = FontStyle.Normal,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

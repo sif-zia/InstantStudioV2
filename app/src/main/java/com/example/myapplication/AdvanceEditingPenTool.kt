@@ -57,6 +57,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.widget.CommonAppBar
 
 class AdvanceEditingPenTool : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,91 +103,49 @@ class AdvanceEditingPenTool : ComponentActivity() {
                     val cancel = painterResource(R.drawable.cancel_button)
 
                     val backgroundImage: Painter = painterResource(id = R.drawable.b1)
-
-
+                    
                     Column(
-                        modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Gray),
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth()
+                            .background(Color.Gray),
 
                         verticalArrangement = Arrangement.Top,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.Bottom,
-                            modifier = Modifier
-                                .padding(18.dp)
-                                .fillMaxWidth()
-                        ) {
 
-                            item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                                Box(
-                                    modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable {finalImage = sourceBitmap}
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
-                                        Image(
-                                            painter = cancel,
-                                            contentDescription = "Your Icon Description",
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                        )
-                                        Text(
-                                            text = "Cancel",
-                                            color = Color.Black,
-                                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Justify,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                        )
-                                    }
-                                }
-                            }
+                        CommonAppBar(title = "Pen Tool")
+                        Row(modifier = Modifier.height(184.dp)) {
+                            HarmonyColorPicker(harmonyMode = ColorHarmonyMode.SHADES,
+                                modifier = Modifier.size(184.dp),
+                                onColorChanged = { color ->
+                                    penColor = color.toColor()
+                                })
 
-                            item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                                Box(
-                                    modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable {finalImage = sourceImgBitmap}
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
-                                        Image(
-                                            painter = done,
-                                            contentDescription = "Your Icon Description",
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                        )
-                                        Text(
-                                            text = "Done",
-                                            color = Color.Black,
-                                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Justify,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                        )
-                                    }
-                                }
+                            Column(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .height(168.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Slider(
+                                    value = penSize, onValueChange = {
+                                        penSize = it
+                                        if (imageUri != null) {
+                                            sourceImgBitmap = sourceBitmap
+                                        }
+                                    }, valueRange = 1f..30f, // Define the range of float values
+                                    steps = 50 // Optional: Define the number of steps in the range
+                                )
+                                Text("Pen Size: ${penSize.roundToInt()}")
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Box(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp)
                                 .weight(1f, fill = false)
                                 .drawWithContent {
                                     screenWidth = size.width.toInt()
@@ -258,30 +217,78 @@ class AdvanceEditingPenTool : ComponentActivity() {
 
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Row(modifier = Modifier.height(184.dp)) {
-                            HarmonyColorPicker(harmonyMode = ColorHarmonyMode.SHADES,
-                                modifier = Modifier.size(184.dp),
-                                onColorChanged = { color ->
-                                    penColor = color.toColor()
-                                })
+                        LazyRow(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.Bottom,
+                            modifier = Modifier
+                                .padding(18.dp)
+                                .fillMaxWidth()
+                        ) {
 
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .height(168.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Slider(
-                                    value = penSize, onValueChange = {
-                                        penSize = it
-                                        if (imageUri != null) {
-                                            sourceImgBitmap = sourceBitmap
-                                        }
-                                    }, valueRange = 1f..30f, // Define the range of float values
-                                    steps = 50 // Optional: Define the number of steps in the range
-                                )
-                                Text("Pen Size: ${penSize.roundToInt()}")
+                            item {
+                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray.copy(0.5f))
+                                        .padding(4.dp)
+                                        .clickable { finalImage = sourceBitmap }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = cancel,
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Cancel",
+                                            color = Color.Black,
+                                            fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Justify,
+                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        )
+                                    }
+                                }
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray.copy(0.5f))
+                                        .padding(4.dp)
+                                        .clickable { finalImage = sourceImgBitmap }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = done,
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Done",
+                                            color = Color.Black,
+                                            fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Justify,
+                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
