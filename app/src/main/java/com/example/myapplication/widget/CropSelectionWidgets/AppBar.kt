@@ -9,9 +9,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -30,6 +32,9 @@ fun AppBar(title: String, bottomSheetState: BottomSheetState, modifier: Modifier
 //      )
 //    },
     title = { Text(text = title) },
+    colors = TopAppBarDefaults.topAppBarColors(
+      containerColor = Color.DarkGray,
+      titleContentColor = Color.White),
     actions = {
       val coroutineScope = rememberCoroutineScope()
       IconButton(
@@ -45,7 +50,7 @@ fun AppBar(title: String, bottomSheetState: BottomSheetState, modifier: Modifier
         Image(
           painter = painterResource(id = R.drawable.ic_setting),
           contentDescription = stringResource(id = R.string.config_alt),
-          colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+          colorFilter = ColorFilter.tint(Color.White)
         )
       }
     },

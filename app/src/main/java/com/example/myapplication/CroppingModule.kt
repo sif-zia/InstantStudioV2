@@ -1,29 +1,34 @@
 package com.example.myapplication
 
 import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.BottomSheetScaffold
-import androidx.compose.material.Button
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
@@ -38,24 +43,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.FileProvider
+import androidx.compose.ui.window.DialogProperties
+import com.example.myapplication.widget.CommonAppBar
 import com.example.myapplication.widget.CropSelectionWidgets.AppBar
 import com.example.myapplication.widget.CropSelectionWidgets.CropFAB
 import com.example.myapplication.widget.CropSelectionWidgets.CropifyOptionSelector
+import com.example.myapplication.widget.bitmapToUri
 import io.moyuru.cropify.Cropify
 import io.moyuru.cropify.CropifyOption
 import io.moyuru.cropify.rememberCropifyState
-import java.io.File
-
-import android.content.Intent
-import com.example.myapplication.widget.bitmapToUri
-import android.graphics.Bitmap
-import android.util.Log
-import androidx.compose.ui.graphics.asAndroidBitmap
-import java.io.FileOutputStream
-import java.io.IOException
 
 class CroppingModule : ComponentActivity() {
 
@@ -69,12 +69,15 @@ class CroppingModule : ComponentActivity() {
             val cropifyState = rememberCropifyState()
             var cropifyOption by remember { mutableStateOf(CropifyOption()) }
             var croppedImage by remember { mutableStateOf<ImageBitmap?>(null) }
+            var isPreview by remember { mutableStateOf(false) }
 
             val scaffoldState = rememberBottomSheetScaffoldState()
 
             croppedImage?.let {
-                ImagePreviewDialog(bitmap = it, onDismissRequest = { croppedImage = null }) { returnedUri ->
+                isPreview = true
+                ImagePreviewDialog(bitmap = it, onDismissRequest = { croppedImage = null ; isPreview = false}) { returnedUri ->
                     // Pass the returnedUri back to the launcher activity
+                    isPreview = false
                     val resultIntent = Intent().apply {
                         putExtra("croppedImageUri", returnedUri)
                     }
@@ -82,13 +85,11 @@ class CroppingModule : ComponentActivity() {
                     finish() // Finish the activity to return to the launcher
                 }
             }
-
-
             BottomSheetScaffold(
                 topBar = {
                     AppBar(
                         title = "Crop Image",
-                        bottomSheetState = scaffoldState.bottomSheetState
+                        bottomSheetState = scaffoldState.bottomSheetState,
                     )
                 },
                 content = { it ->
@@ -124,65 +125,139 @@ class CroppingModule : ComponentActivity() {
                     )
                 },
                 floatingActionButton = {
-                    CropFAB(modifier = Modifier.navigationBarsPadding()) { cropifyState.crop() }
+                    CropFAB(modifier = Modifier.navigationBarsPadding(), isPreview) { cropifyState.crop() }
                 },
                 sheetPeekHeight = 0.dp,
                 scaffoldState = scaffoldState,
-                sheetBackgroundColor = androidx.compose.material.MaterialTheme.colors.surface,
+                sheetBackgroundColor = Color.DarkGray,
                 sheetContentColor = contentColorFor(androidx.compose.material.MaterialTheme.colors.surface),
                 backgroundColor = androidx.compose.material.MaterialTheme.colors.background,
                 contentColor = contentColorFor(backgroundColor = androidx.compose.material.MaterialTheme.colors.background),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
             )
-
         }
     }
-
     @Composable
     fun ImagePreviewDialog(
         bitmap: ImageBitmap,
         onDismissRequest: () -> Unit,
         onReturnImage: (Uri) -> Unit // Change the callback to return Uri
     ) {
-        Dialog(onDismissRequest = onDismissRequest) {
+        Dialog(
+            onDismissRequest = onDismissRequest,
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
             val context = LocalContext.current
-
-            // Display the cropped image
-            Box(
-                modifier = Modifier.padding(16.dp)
+            Column(
+                modifier = Modifier.background(Color.Black.copy(alpha = 0.5f))
             ) {
-                Image(
-                    bitmap = bitmap,
-                    contentDescription = "Cropped Image",
-                    modifier = Modifier.fillMaxWidth()
-                )
-                // Action button to return the cropped image as Uri
-                // Position the button in the lower-right corner
-                Box(
-                    modifier = Modifier
-                        .padding(end = 16.dp, bottom = 16.dp) // Adjust as needed
-                        .align(Alignment.BottomEnd)
-                ) {
-                    Button(
-                        onClick = {
-                            // Convert ImageBitmap to Uri and pass it to the callback
-                            val uri = bitmapToUri(context,bitmap)
-
-                            onReturnImage(uri)
-                        },
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(Color.Blue), // Change the background color as needed
-                        contentPadding = PaddingValues(0.dp) // Remove default padding
+                CommonAppBar(title = "Crop Image Preview", modifier = Modifier.background(color = Color.DarkGray))
+                Spacer(modifier = Modifier.fillMaxHeight(0.1f))
+                Column {
+                    Box(
+                        modifier = Modifier.fillMaxHeight(0.8f)
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_check_24),
-                            contentDescription = "Return Cropped Image Icon",
-                            tint = Color.White // Adjust the icon color as needed
+                        Image(
+                            bitmap = bitmap,
+                            contentDescription = "Cropped Image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
                         )
+
                     }
                 }
+                Column(
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Spacer(modifier = Modifier.weight(0.2f))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.Bottom,
+                        modifier = Modifier
+                            .padding(18.dp)
+                            .fillMaxWidth()
+                    ) {
+
+
+                        item {
+                            Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                            Box(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.LightGray.copy(0.5f))
+                                    .padding(4.dp)
+                                    .clickable {
+                                        onDismissRequest()
+                                    }
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.cancel_button),
+                                        contentDescription = "Cancel",
+                                        modifier = Modifier
+                                            .size(28.dp)
+
+                                    )
+                                    Text(
+                                        text = "Cancel",
+                                        color = Color.Black,
+                                        fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                    )
+                                }
+                            }
+                        }
+
+
+                        item {
+                            Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                            Box(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.LightGray.copy(0.5f))
+                                    .padding(4.dp)
+                                    .clickable {
+                                        val uri = bitmapToUri(context, bitmap)
+                                        onReturnImage(uri)
+                                    }
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.baseline_check_24),
+                                        contentDescription = "Done",
+                                        modifier = Modifier
+                                            .size(28.dp)
+
+                                    )
+                                    Text(
+                                        text = "Done",
+                                        color = Color.Black,
+                                        fontSize = 10.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.fillMaxHeight(0.1f))
             }
         }
     }

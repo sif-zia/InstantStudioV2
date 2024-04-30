@@ -1,12 +1,15 @@
 package com.example.myapplication
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.net.Uri
 import android.os.Bundle
+import android.util.DisplayMetrics
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -17,10 +20,9 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,8 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.example.myapplication.widget.CommonAppBar
 import com.example.myapplication.widget.CropSelectionWidgets.loadImageBitmap
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -55,65 +56,70 @@ class SelectionModule : ComponentActivity() {
         val imageUri: Uri? = intent?.getParcelableExtra("imageUri")
 
         setContent {
-            val navController = rememberNavController()
             var tapPosition by remember { mutableStateOf(Pair(0f, 0f)) }
             val tappedPoints = remember { mutableStateListOf<Pair<Float, Float>>() }
-            val thresholdDistance = 10f
+            val thresholdDistance = 20f
+
             var selectedImageBitmap by remember(imageUri) { mutableStateOf<ImageBitmap?>(null) }
-            var bitmap by remember() { mutableStateOf<ImageBitmap?>(null) }
             var sticker by remember(imageUri) { mutableStateOf<ImageBitmap?>(null) }
             val context = LocalContext.current
-            var screenWidth = context.resources.displayMetrics.widthPixels
-            var screenHeight = context.resources.displayMetrics.heightPixels
 
-            var height by remember { mutableStateOf(0) }
-            var width by remember { mutableStateOf(0) }
+            var height by remember { mutableIntStateOf(0) }
+            var width by remember { mutableIntStateOf(0) }
 
-            var imageHeight by remember { mutableStateOf(0) }
-            var imageWidth by remember { mutableStateOf(0) }
+            var originalHeight by remember { mutableIntStateOf(0) }
+            var originalWidth by remember { mutableIntStateOf(0) }
+            var originalImageBitmap by remember(imageUri) { mutableStateOf<ImageBitmap?>(null) }
 
-            var offsetX by remember { mutableStateOf(0f) }
+            var imageHeight by remember { mutableFloatStateOf(0f) }
+            var imageWidth by remember { mutableFloatStateOf(0f) }
+
+            var offsetX by remember { mutableFloatStateOf(0f) }
+            var stickerOffsetX by remember { mutableFloatStateOf(0f) }
+            var stickerOffsetY by remember { mutableFloatStateOf(0f) }
+
             var isSelected by remember { mutableStateOf(false) }
             var isPasting by remember { mutableStateOf(true) }
-            var hasScaled by remember { mutableStateOf(false) }
-
+            var hasScaled by remember { mutableIntStateOf(2) }
             var isPolygon by remember { mutableStateOf(false) }
             var isFreehand by remember { mutableStateOf(false) }
+            var isCancelled by remember { mutableStateOf(false) }
+
+            var padding by remember { mutableFloatStateOf(16f) }
 
             LaunchedEffect(imageUri) {
                 selectedImageBitmap = try {
-                        loadImageBitmap(context, imageUri)
+                    loadImageBitmap(context, imageUri)
                 } catch (t: Throwable) {
                     null
                 }
+                originalWidth = selectedImageBitmap!!.width
+                originalHeight = selectedImageBitmap!!.height
+                originalImageBitmap = selectedImageBitmap
             }
             Column{
+                CommonAppBar(title = "Sticker Selection", modifier = Modifier.background(color = Color.DarkGray))
+                Spacer(modifier = Modifier.fillMaxHeight(0.1f))
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxHeight(0.9f)
+                    modifier = Modifier.fillMaxHeight(0.8f)
+                        .drawWithContent {
+                            drawContent()
+                            width = size.width.toInt()
+                            height = size.height.toInt()
+                        }
                 ) {
                     selectedImageBitmap?.let {
-                        var stickeroffsetX by remember { mutableStateOf(0f) }
-                        var stickeroffsetY by remember { mutableStateOf(0f) }
-
-                        if(!isPolygon && !isFreehand){
-                            Image(
-                                bitmap = it,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .clipToBounds()
-                                    .fillMaxWidth()
-                            )
-                        }
-                        if(isPolygon || isFreehand) {
-                            Image(
-                                bitmap = it,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .clipToBounds()
-                                    .fillMaxWidth()
-                                    .pointerInput(Unit) {
-                                        detectTapGestures { offset ->
+                        Image(
+                            bitmap = it,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .padding(horizontal = padding.pxToDp().dp)
+                                .clipToBounds()
+                                .fillMaxWidth()
+                                .pointerInput(Unit) {
+                                    detectTapGestures { offset ->
+                                        if(isPolygon || isFreehand) {
                                             val point = Pair(offset.x, offset.y)
                                             if (!isSelected && isPolygon) {
                                                 tappedPoints.add(point)
@@ -121,149 +127,218 @@ class SelectionModule : ComponentActivity() {
                                             }
                                         }
                                     }
-                                    .pointerInput(Unit) {
-                                        detectDragGestures { change, dragAmount ->
-                                            change.consume()
+                                }
+                                .pointerInput(Unit) {
+                                    detectDragGestures { change, dragAmount ->
+                                        change.consume()
+                                        if(isPolygon || isFreehand) {
                                             if (!isSelected && isFreehand) {
-                                                tappedPoints.add(Pair(change.position.x, change.position.y))
-                                            }
-                                            if (isSelected && isPasting) {
-                                                stickeroffsetX += dragAmount.x
-                                                stickeroffsetY += dragAmount.y
-                                                if (change.positionChange() != androidx.compose.ui.geometry.Offset.Zero) change.consume()
-                                            }
-                                        }
-                                    }
-                                    .drawWithContent {
-                                        drawContent()
-                                        width = size.width.toInt()
-                                        height = size.height.toInt()
-                                        if (!hasScaled) {
-                                            selectedImageBitmap?.let {
-                                                if (selectedImageBitmap!!.width < screenWidth) {
-                                                    selectedImageBitmap = resizeBitmapWithAspectRatio(
-                                                        selectedImageBitmap!!.asAndroidBitmap(),
-                                                        width,
-                                                        width
-                                                    ).asImageBitmap()
-                                                }
-                                            }
-                                            hasScaled = true
-                                        }
-                                        tappedPoints.forEachIndexed { index, point ->
-                                            drawCircle(
-                                                color = Color.Red,
-                                                center = androidx.compose.ui.geometry.Offset(point.first, point.second),
-                                                radius = 5f,
-                                                style = Fill
-                                            )
-
-                                            if (index > 0) {
-                                                val previousPoint = tappedPoints[index - 1]
-                                                drawLine(
-                                                    color = Color.Red,
-                                                    start = androidx.compose.ui.geometry.Offset(
-                                                        previousPoint.first,
-                                                        previousPoint.second
-                                                    ),
-                                                    end = androidx.compose.ui.geometry.Offset(point.first, point.second),
-                                                    strokeWidth = 4f
-                                                )
-                                            }
-
-                                            if (index == tappedPoints.lastIndex && tappedPoints.size > 2) {
-                                                val firstPoint = tappedPoints.first()
-                                                val lastPoint = tappedPoints.last()
-                                                val distance = sqrt(
-                                                    (lastPoint.first - firstPoint.first).pow(2) + (lastPoint.second - firstPoint.second).pow(
-                                                        2
+                                                tappedPoints.add(
+                                                    Pair(
+                                                        change.position.x,
+                                                        change.position.y
                                                     )
                                                 )
-                                                if (distance <= thresholdDistance) {
-                                                    isSelected = true
-                                                    val path = Path().apply {
-                                                        tappedPoints.forEachIndexed { index, point ->
-                                                            if (index == 0) moveTo(
-                                                                point.first,
-                                                                point.second
-                                                            )
-                                                            else lineTo(point.first, point.second)
-                                                        }
-                                                        close()
-                                                    }
-//                                        drawPath(path, color = Color.Red, style = Fill)
-                                                    imageWidth = selectedImageBitmap!!.width
-                                                    imageHeight = selectedImageBitmap!!.height
-
-                                                    offsetX = 0f
-                                                    if (imageWidth < screenWidth) {
-                                                        offsetX =
-                                                            (screenWidth.toFloat() - imageWidth.toFloat()) / 2.0f
-                                                    }
-                                                    sticker = getSticker(
-                                                        selectedImageBitmap!!.asAndroidBitmap(),
-                                                        path,
-                                                        width,
-                                                        height,
-                                                        offsetX
-                                                    ).asImageBitmap()
-                                                }
                                             }
-
-                                        }
-                                        sticker?.let { it1 ->
-                                            drawImage(
-                                                image = it1,
-                                                topLeft = androidx.compose.ui.geometry.Offset(stickeroffsetX, stickeroffsetY)
-                                            )
-                                        }
-                                        if (!isPasting) {
-                                            selectedImageBitmap = pasteBitmapOverAnother(
-                                                selectedImageBitmap!!.asAndroidBitmap(),
-                                                sticker!!.asAndroidBitmap(),
-                                                androidx.compose.ui.geometry.Offset(stickeroffsetX, stickeroffsetY)
-                                            ).asImageBitmap()
-                                            sticker = null
-                                            tapPosition = Pair(0f, 0f)
-                                            tappedPoints.clear()
-                                            stickeroffsetX = 0f
-                                            stickeroffsetY = 0f
-                                            isPasting = true
-                                            isSelected = false
-                                            isPolygon = false
-                                            isFreehand = false
-                                            val returnedUri = selectedImageBitmap?.let {
-                                                com.example.myapplication.widget.bitmapToUri(
-                                                    context,
-                                                    it
-                                                )
+                                            if (isSelected && isPasting) {
+                                                stickerOffsetX += dragAmount.x
+                                                stickerOffsetY += dragAmount.y
+                                                if (change.positionChange() != Offset.Zero) change.consume()
                                             }
-                                            val resultIntent = Intent().apply {
-                                                putExtra("croppedImageUri", returnedUri)
-                                            }
-                                            setResult(Activity.RESULT_OK, resultIntent)
-                                            finish() // Finish the activity to return to the launcher
                                         }
                                     }
-                            )
-                        }
-                    }
-                }
-                if(isSelected) {
-                    Button(
-                        onClick = { isPasting = false },
-                        modifier = Modifier
-                            .padding(vertical = 8.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_check_24),
-                            contentDescription = "Paste Sticker",
-                            tint = Color.White // Adjust the icon color as needed
+                                }
+                                .drawWithContent {
+                                    drawContent()
+                                    println(height.toString()+"-----height")
+                                    println(width.toString()+"-----width")
+                                    offsetX = 16.dpToPx(context)
+                                    if (hasScaled!=0) {
+                                        if(hasScaled==1) {
+                                            selectedImageBitmap?.let {
+                                                selectedImageBitmap = resizeBitmapWithAspectRatio(
+                                                    selectedImageBitmap!!.asAndroidBitmap(),width,height, offsetX).asImageBitmap()
+                                            }
+                                            imageWidth = selectedImageBitmap!!.width.toFloat()
+                                            imageHeight = selectedImageBitmap!!.height.toFloat()
+                                            if(imageWidth < width) {
+                                                padding =  ((width - imageWidth) / 2)
+                                            }
+
+                                            println(padding.toString()+"----padding")
+                                            println(imageWidth.toString()+"-----iwidth")
+                                            println(imageHeight.toString()+"-----iheight")
+                                        }
+                                        hasScaled--
+                                    }
+                                    tappedPoints.forEachIndexed { index, point ->
+                                        drawCircle(
+                                            color = Color.Red,
+                                            center = Offset(point.first, point.second),
+                                            radius = 5f,
+                                            style = Fill
+                                        )
+
+                                        if (index > 0) {
+                                            val previousPoint = tappedPoints[index - 1]
+                                            drawLine(
+                                                color = Color.Red,
+                                                start = Offset(
+                                                    previousPoint.first,
+                                                    previousPoint.second
+                                                ),
+                                                end = Offset(point.first, point.second),
+                                                strokeWidth = 4f
+                                            )
+                                        }
+
+                                        if (index == tappedPoints.lastIndex && tappedPoints.size > 2) {
+                                            val firstPoint = tappedPoints.first()
+                                            val lastPoint = tappedPoints.last()
+                                            val distance = sqrt(
+                                                (lastPoint.first - firstPoint.first).pow(2) + (lastPoint.second - firstPoint.second).pow(
+                                                    2
+                                                )
+                                            )
+                                            if (distance <= thresholdDistance) {
+                                                isSelected = true
+                                                sticker = extractSticker(selectedImageBitmap!!.asAndroidBitmap(),tappedPoints,imageWidth,imageHeight).asImageBitmap()
+                                            }
+                                        }
+
+                                    }
+                                    sticker?.let { it1 ->
+                                        drawImage(
+                                            image = it1,
+                                            topLeft = Offset(stickerOffsetX, stickerOffsetY)
+                                        )
+                                    }
+                                    if (!isPasting) {
+                                        selectedImageBitmap = pasteSticker(originalImageBitmap!!.asAndroidBitmap(),sticker!!.asAndroidBitmap(),Offset(stickerOffsetX, stickerOffsetY),originalWidth,originalHeight).asImageBitmap()
+                                        sticker = null
+                                        tapPosition = Pair(0f, 0f)
+                                        tappedPoints.clear()
+                                        stickerOffsetX = 0f
+                                        stickerOffsetY = 0f
+                                        isPasting = true
+                                        isSelected = false
+                                        isPolygon = false
+                                        isFreehand = false
+
+                                        val returnedUri = selectedImageBitmap?.let {
+                                            com.example.myapplication.widget.bitmapToUri(
+                                                context,
+                                                it
+                                            )
+                                        }
+                                        val resultIntent = Intent().apply {
+                                            putExtra("croppedImageUri", returnedUri)
+                                        }
+                                        setResult(Activity.RESULT_OK, resultIntent)
+                                        finish() // Finish the activity to return to the launcher
+                                    }
+                                    if(isCancelled){
+                                        sticker = null
+                                        tapPosition = Pair(0f, 0f)
+                                        tappedPoints.clear()
+                                        stickerOffsetX = 0f
+                                        stickerOffsetY = 0f
+                                        isPasting = true
+                                        isSelected = false
+                                        isPolygon = false
+                                        isFreehand = false
+                                        isCancelled = false
+                                    }
+                                }
                         )
                     }
+                }
+                if(isPolygon || isFreehand) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Spacer(modifier = Modifier.weight(0.2f))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.Bottom,
+                            modifier = Modifier
+                                .padding(18.dp)
+                                .fillMaxWidth()
+                        ) {
 
 
+                            item {
+                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray.copy(0.5f))
+                                        .padding(4.dp)
+                                        .clickable { isCancelled = true }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.cancel_button),
+                                            contentDescription = "Cancel",
+                                            modifier = Modifier
+                                                .size(28.dp)
+
+                                        )
+                                        Text(
+                                            text = "Cancel",
+                                            color = Color.Black,
+                                            fontSize = 10.sp,
+//                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        )
+                                    }
+                                }
+                            }
+
+                            if(isSelected) {
+                                item {
+                                    Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                                    Box(
+                                        modifier = Modifier
+                                            .size(70.dp)
+                                            .clip(CircleShape)
+                                            .background(Color.LightGray.copy(0.5f))
+                                            .padding(4.dp)
+                                            .clickable { isPasting = false }
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.baseline_check_24),
+                                                contentDescription = "Paste",
+                                                modifier = Modifier
+                                                    .size(28.dp)
+
+                                            )
+                                            Text(
+                                                text = "Paste",
+                                                color = Color.Black,
+                                                fontSize = 10.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 if(!isPolygon && !isFreehand) {
                     Column(
@@ -289,6 +364,7 @@ class SelectionModule : ComponentActivity() {
                                         .clip(CircleShape)
                                         .background(Color.LightGray.copy(0.5f))
                                         .padding(4.dp)
+                                        .clickable { isPolygon = true }
                                 ) {
                                     Column(
                                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -297,17 +373,17 @@ class SelectionModule : ComponentActivity() {
                                     ) {
                                         Image(
                                             painter = painterResource(id = R.drawable.polygon_select),
-                                            contentDescription = "Freehand Selection",
+                                            contentDescription = "Polygon Selection",
                                             modifier = Modifier
                                                 .size(28.dp)
-                                                .clickable { isPolygon = true }
+
                                         )
                                         Text(
-                                            text = "Freehand Selection",
+                                            text = "Polygon Selection",
                                             color = Color.Black,
                                             fontSize = 10.sp,
 //                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Justify,
+                                            textAlign = TextAlign.Center,
                                             modifier = Modifier.padding(5.dp) // Add padding at the bottom
                                         )
                                     }
@@ -323,6 +399,7 @@ class SelectionModule : ComponentActivity() {
                                         .clip(CircleShape)
                                         .background(Color.LightGray.copy(0.5f))
                                         .padding(4.dp)
+                                        .clickable { isFreehand = true }
                                 ) {
                                     Column(
                                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -334,14 +411,13 @@ class SelectionModule : ComponentActivity() {
                                             contentDescription = "Freehand Selection",
                                             modifier = Modifier
                                                 .size(28.dp)
-                                                .clickable { isFreehand = true }
+
                                         )
                                         Text(
                                             text = "Freehand Selection",
                                             color = Color.Black,
                                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Justify,
+                                            textAlign = TextAlign.Center,
                                             modifier = Modifier.padding(5.dp) // Add padding at the bottom
                                         )
                                     }
@@ -350,64 +426,86 @@ class SelectionModule : ComponentActivity() {
                         }
                     }
                 }
+                Spacer(modifier = Modifier.fillMaxHeight(0.1f))
             }
         }
     }
-    fun getSticker(
-        sourceImgBitmap: Bitmap,
-        drawPath: Path,
-        newWidth: Int,
-        newHeight: Int,
-        offsetX: Float
-    ): Bitmap {
-        val mutableBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888)
-        val canvas = android.graphics.Canvas(mutableBitmap)
+    @Composable
+    fun Float.pxToDp(): Float = (this / (LocalContext.current.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
+
+    private fun Int.dpToPx(context: Context): Float = (this * context.resources.displayMetrics.density)
+
+    private fun extractSticker(sourceImgBitmap: Bitmap, tappedPoints: SnapshotStateList<Pair<Float, Float>>, newWidth: Float, newHeight: Float): Bitmap {
+        //shift path if offset > 0
+        val drawPath = Path().apply {
+            tappedPoints.forEachIndexed { index, point ->
+                val shiftedX = point.first
+                if (index == 0) moveTo(
+                    shiftedX,
+                    point.second
+                )
+                else lineTo(shiftedX, point.second)
+            }
+            close()
+        }
+
+        //make stencil
+        val mutableBitmap = Bitmap.createBitmap(newWidth.toInt(), newHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(mutableBitmap)
         val paint = Paint().apply {
             color = android.graphics.Color.BLACK
             style = Paint.Style.FILL
         }
         canvas.drawPath(drawPath.asAndroidPath(), paint)
-        return extractImage(sourceImgBitmap,mutableBitmap,newWidth, newHeight,offsetX)
-    }
 
-    fun extractImage(
-        sourceImgBitmap: Bitmap,
-        destinationImgBitmap: Bitmap,
-        newWidth: Int,
-        newHeight: Int,
-        offsetX: Float
-    ):Bitmap{
-
-        val mutableBitmap = Bitmap.createBitmap(newWidth, newHeight, Bitmap.Config.ARGB_8888);
-        val canvas = android.graphics.Canvas(mutableBitmap)
-        val paint = Paint().apply {  }
-        canvas.drawBitmap(destinationImgBitmap, 0f, 0f, paint)
-
+        //extract image
         val mode: PorterDuff.Mode = android.graphics.PorterDuff.Mode.SRC_IN
         paint.setXfermode(PorterDuffXfermode(mode))
-        val bit = resizeBitmapWithAspectRatio(sourceImgBitmap, newWidth, newHeight)
-        canvas.drawBitmap(bit, offsetX, 0f, paint)
+        canvas.drawBitmap(sourceImgBitmap, 0f, 0f, paint)
+
         return mutableBitmap
+
     }
 
-    fun resizeBitmapWithAspectRatio(bitmap: Bitmap, newWidth: Int, newHeight: Int): Bitmap {
-        val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+    private fun pasteSticker(originalBitmap: Bitmap, stickerBitmap: Bitmap, offset: Offset, originalWidth: Int, originalHeight: Int): Bitmap {
 
-        val scaledWidth: Int = (newHeight * ratio).toInt()
-        val scaledHeight: Int = newHeight
+        val resultBitmap = Bitmap.createBitmap(originalWidth, originalHeight, originalBitmap.config)
+        val canvas = Canvas(resultBitmap)
+        canvas.drawBitmap(originalBitmap, 0f, 0f, null)  // Draw the large bitmap first
 
-        return Bitmap.createScaledBitmap(bitmap, scaledWidth, scaledHeight, true)
-    }
-
-    fun pasteBitmapOverAnother(largeBitmap: Bitmap, smallBitmap: Bitmap, offset: Offset): Bitmap {
-        val x = (largeBitmap.width.toFloat()/smallBitmap.width.toFloat())*offset.x
-        val y = (largeBitmap.height.toFloat()/smallBitmap.height.toFloat())*offset.y
-        val scaledSticker = Bitmap.createScaledBitmap(smallBitmap, largeBitmap.width, largeBitmap.height, true)
-        val resultBitmap = Bitmap.createBitmap(largeBitmap.width, largeBitmap.height, largeBitmap.config)
-        val canvas = android.graphics.Canvas(resultBitmap)
-        canvas.drawBitmap(largeBitmap, 0f, 0f, null)  // Draw the large bitmap first
+        val scaledSticker = Bitmap.createScaledBitmap(stickerBitmap, originalWidth , originalHeight , true)
+        val x = (scaledSticker.width.toFloat()/stickerBitmap.width.toFloat())*offset.x
+        val y = (scaledSticker.height.toFloat()/stickerBitmap.height.toFloat())*offset.y
         canvas.drawBitmap(scaledSticker, x, y, null)  // Draw the small bitmap at the specified offset
 
         return resultBitmap
     }
+
+    private fun resizeBitmapWithAspectRatio(bitmap: Bitmap,newWidth: Int,newHeight: Int,offsetX: Float): Bitmap {
+
+        var ratio: Float
+        var scaledWidth: Float
+        var scaledHeight: Float
+
+        if(bitmap.height > bitmap.width){
+            ratio = bitmap.height.toFloat() / bitmap.width.toFloat()
+
+            scaledWidth = newWidth.toFloat()
+            scaledHeight = newWidth.toFloat()*ratio
+
+            if(scaledHeight.toInt() > newHeight){
+                scaledHeight = newHeight.toFloat()
+                scaledWidth = newHeight.toFloat()*(1/ratio)
+            }
+
+        }
+        else{
+            ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
+            scaledWidth = (newWidth.toFloat()-offsetX)*ratio
+            scaledHeight = newWidth.toFloat()-offsetX
+        }
+
+        return Bitmap.createScaledBitmap(bitmap, scaledWidth.toInt() , scaledHeight.toInt() , true)
+    }
+
 }
