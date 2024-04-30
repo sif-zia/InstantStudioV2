@@ -877,21 +877,20 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
     ) {
         Spacer(modifier = Modifier.weight(0.2f))
         LazyRow(
-            horizontalArrangement = Arrangement.SpaceAround,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier
                 .padding(18.dp)
                 .fillMaxWidth()
+                .padding(bottom = 10.dp).clip(RoundedCornerShape(35.dp))
         ) {
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -909,7 +908,6 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
                             text = "Clone",
                             color = Color.Black,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp) // Add padding at the bottom
                         )
@@ -918,13 +916,10 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
             }
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -942,9 +937,8 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
                             text = "Pen",
                             color = Color.Black,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
                 }
