@@ -185,32 +185,31 @@ class AdvanceEditingPenTool : ComponentActivity() {
                         ) {
                             val controller = rememberDrawController()
 
-
-                                DrawBox(drawController = controller,
-                                    modifier = Modifier
-                                        .width(
-                                            sourceImgBitmap.width
-                                                .toFloat()
-                                                .pxToDp().dp
-                                        )
-                                        .height(
-                                            sourceImgBitmap.height
-                                                .toFloat()
-                                                .pxToDp().dp
-                                        )
-                                        .clipToBounds(),
-                                    bitmapCallback = { imageBitmap, error ->
-                                        imageBitmap?.let {
+                            DrawBox(drawController = controller,
+                                modifier = Modifier
+                                    .width(
+                                        sourceImgBitmap.width
+                                            .toFloat()
+                                            .pxToDp().dp
+                                    )
+                                    .height(
+                                        sourceImgBitmap.height
+                                            .toFloat()
+                                            .pxToDp().dp
+                                    )
+                                    .clipToBounds(),
+                                bitmapCallback = { imageBitmap, error ->
+                                    imageBitmap?.let {
 //                                save(it.asAndroidBitmap())
-                                        }
+                                    }
 
-                                    }) { undoCount, redoCount ->
+                                }) { undoCount, redoCount ->
 
-                                    sizeBarVisitbility = false
-                                    colorBarVisitbility = false
-                                    redoVisitbility = redoCount != 0
-                                    drawPath = controller.exportPath()
-                                }
+                                sizeBarVisitbility = false
+                                colorBarVisitbility = false
+                                redoVisitbility = redoCount != 0
+                                drawPath = controller.exportPath()
+                            }
 
                             sourceImgBitmap =
                                 modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)

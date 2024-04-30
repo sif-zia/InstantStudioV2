@@ -51,6 +51,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.SliderDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -89,15 +90,14 @@ class AdvanceEditingCloningTool : ComponentActivity() {
 
                     val context: Context = LocalContext.current
                     val displayMetrics = context.resources.displayMetrics
-                    val screenWidth = displayMetrics.widthPixels
-                    val screenHeight = displayMetrics.heightPixels
-                    val h: Float =  sourceImgBitmap.height.toFloat()
-                    val w: Float =  sourceImgBitmap.width.toFloat()
-                    val (scaledWidth, scaledHeight) = calculateScaledDimensions(w, h, screenWidth, screenHeight)
+                    var screenWidth: Int by remember { mutableStateOf(displayMetrics.widthPixels)}
+                    var screenHeight: Int by remember { mutableStateOf(displayMetrics.heightPixels)}
+                    var isResized: Boolean by remember { mutableStateOf(false) }
 
-                    var copyCoordinates by remember { mutableStateOf(Offset(scaledWidth / 2, scaledHeight / 2)) }
-                    var imageWidth: Int = scaledWidth.toInt()
-                    var imageHeight: Int = scaledHeight.toInt()
+                    val maxWidth: Int = 350
+                    val maxHeight: Int = 450
+
+                    var copyCoordinates by remember { mutableStateOf(Offset.Unspecified) }
                     var pasteCoordinates by remember { mutableStateOf(Offset.Unspecified) }
                     var croppedBitmap by remember { mutableStateOf(Bitmap.createBitmap(selectionSize.toInt(), selectionSize.toInt(), Bitmap.Config.ARGB_8888)) }
 
@@ -107,11 +107,12 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                     val select = painterResource(R.drawable.crop2)
                     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
 
+
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(Color.Gray),
-                        verticalArrangement = Arrangement.Center,
+                        verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CommonAppBar(title = "Cloning Tool")
@@ -147,80 +148,96 @@ class AdvanceEditingCloningTool : ComponentActivity() {
 //                                Text("Reset Selection")
 //                            }
                         }
+                        val width = if (!isResized) maxWidth else sourceImgBitmap.width.toFloat().pxToDp().toInt()
+                        val height = if (!isResized) maxHeight else sourceImgBitmap.height.toFloat().pxToDp().toInt()
                         Box(modifier = Modifier
-                            .weight(1f, fill = false)
-                            .fillMaxSize(), contentAlignment = Alignment.Center) {
-
-                            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceEvenly, horizontalAlignment = Alignment.CenterHorizontally) {
-                                Canvas(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .aspectRatio(sourceImgBitmap.width.toFloat() / sourceImgBitmap.height.toFloat())
-                                        .clipToBounds()
-                                        .pointerInput(isSelecting) {
-                                            detectDragGestures { change, dragAmount ->
-                                                if (!isSelecting) {
-                                                    copyCoordinates += dragAmount
-                                                    if (pasteCoordinates != Offset.Unspecified)
-                                                        pasteCoordinates += dragAmount
-                                                    change.consume()
-                                                }
+                            .width(width.dp)
+                            .height(height.dp)
+                            .clipToBounds()
+                            .drawWithContent {
+                                drawContent()
+                                screenWidth = size.width.toInt()
+                                screenHeight = size.height.toInt()
+                                if(!isResized) {
+                                    sourceImgBitmap = resizeBitmapWithAspectRatio(
+                                        sourceImgBitmap,
+                                        screenWidth,
+                                        screenHeight
+                                    )
+                                    isResized = true
+                                }
+                            },
+                            contentAlignment = Alignment.Center)
+                        {
+                            Canvas(
+                                modifier = Modifier
+                                    .width(
+                                    sourceImgBitmap.width
+                                    .toFloat()
+                                    .pxToDp().dp
+                                ).height(
+                                        sourceImgBitmap.height
+                                        .toFloat()
+                                        .pxToDp().dp
+                                )
+                                    .clipToBounds()
+                                    .pointerInput(isSelecting) {
+                                        detectDragGestures { change, dragAmount ->
+                                            if (!isSelecting) {
+                                                copyCoordinates += dragAmount
+                                                if (pasteCoordinates != Offset.Unspecified)
+                                                    pasteCoordinates += dragAmount
+                                                change.consume()
                                             }
                                         }
-                                        .pointerInput(isSelecting)
-                                        {
-                                            detectTapGestures(onTap = { offset ->
-                                                // Update tap coordinates
-                                                if (isSelecting)
-                                                    copyCoordinates = offset
-                                                else
-                                                    pasteCoordinates = offset
-                                                Log.d("Drag Log", "$isSelecting")
-                                            })
-                                        }
+                                    }
+                                    .pointerInput(isSelecting)
+                                    {
+                                        detectTapGestures(onTap = { offset ->
+                                            // Update tap coordinates
+                                            if (isSelecting)
+                                                copyCoordinates = offset
+                                            else
+                                                pasteCoordinates = offset
+                                            Log.d("Drag Log", "$isSelecting")
+                                        })
+                                    }
 
-                                ) {
-                                    val canvasWidth = size.width.toInt()
-                                    val canvasHeight = size.height.toInt()
+                            ) {
+                                drawImage(
+                                    image = sourceImgBitmap.asImageBitmap()
+                                )
 
-                                    imageWidth = canvasWidth
-                                    imageHeight = canvasHeight
-
-                                    drawImage(
-                                        image = sourceImgBitmap.asImageBitmap(),
-                                        dstSize = IntSize(canvasWidth, canvasHeight)
-                                    )
-
+                                if(copyCoordinates != Offset.Unspecified) {
                                     drawRect(
                                         color = Color.Red,
                                         size = Size(selectionSize, selectionSize),
                                         topLeft = copyCoordinates,
                                         style = Stroke(width = 2.dp.toPx())
                                     )
-
-                                    if (pasteCoordinates != Offset.Unspecified && !isSelecting) {
-                                        drawImage(
-                                            image = croppedBitmap.asImageBitmap(),
-                                            pasteCoordinates
-                                        )
-
-                                        drawRect(
-                                            color = Color.Green,
-                                            size = Size(selectionSize, selectionSize),
-                                            topLeft = pasteCoordinates,
-                                            style = Stroke(width = 2.dp.toPx())
-                                        )
-                                    }
-
                                 }
 
-                                if (pasteCoordinates != Offset.Unspecified) {
-                                    sourceImgBitmap = resizeBitmapWithAspectRatio(sourceImgBitmap, imageWidth, imageHeight)
-                                    val sourceImage = cropImage(sourceImgBitmap, copyCoordinates, selectionSize.toInt(), selectionSize.toInt());
-                                    sourceImgBitmap = pasteBitmapOverAnother(sourceImgBitmap, sourceImage, pasteCoordinates)
+                                if (pasteCoordinates != Offset.Unspecified && !isSelecting) {
+                                    drawImage(
+                                        image = croppedBitmap.asImageBitmap(),
+                                        pasteCoordinates
+                                    )
+
+                                    drawRect(
+                                        color = Color.Green,
+                                        size = Size(selectionSize, selectionSize),
+                                        topLeft = pasteCoordinates,
+                                        style = Stroke(width = 2.dp.toPx())
+                                    )
                                 }
+
                             }
 
+
+                            if (pasteCoordinates != Offset.Unspecified && copyCoordinates != Offset.Unspecified) {
+                                val sourceImage = cropImage(sourceImgBitmap, copyCoordinates, selectionSize.toInt(), selectionSize.toInt());
+                                sourceImgBitmap = pasteBitmapOverAnother(sourceImgBitmap, sourceImage, pasteCoordinates)
+                            }
 
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -279,8 +296,10 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                                         .background(Color.LightGray.copy(0.5f))
                                         .padding(4.dp)
                                         .clickable {
-                                            isSelecting = !isSelecting
-                                            pasteCoordinates = Offset.Unspecified
+                                            if(copyCoordinates != Offset.Unspecified) {
+                                                isSelecting = !isSelecting
+                                                pasteCoordinates = Offset.Unspecified
+                                            }
                                         }
                                 ) {
                                     Column(
