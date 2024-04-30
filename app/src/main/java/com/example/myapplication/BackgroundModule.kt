@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -154,10 +155,9 @@ class BackgroundModule : ComponentActivity() {
                             model = uri,
                             contentDescription = null,
                             modifier = Modifier
+                                .padding(top = 84.dp)
                                 .fillMaxWidth()
-                                .padding(16.dp)
-                                .padding(top = 100.dp)
-                                .height(500.dp)
+                                .fillMaxHeight(0.8f)
                         )
                     }
                 }
@@ -349,6 +349,7 @@ class BackgroundModule : ComponentActivity() {
     @Composable
     fun ImageConfirmationSurface(imageUri:Uri,onConfirmation: (Boolean) -> Unit ) {
 
+        var bgColor = Color(12,32,63)
 
         val transparentGrey = Color(0xFF2C2E2D)
         androidx.compose.material.Surface(color = transparentGrey) {
@@ -357,6 +358,7 @@ class BackgroundModule : ComponentActivity() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(bgColor)
                     .padding(horizontal = 16.dp), // Add vertical scroll
                 verticalArrangement = Arrangement.Top, // Align the content at the top
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -365,10 +367,9 @@ class BackgroundModule : ComponentActivity() {
                     model = imageUri,
                     contentDescription = null,
                     modifier = Modifier
+                        .padding(top = 84.dp)
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .padding(top = 100.dp)
-                        .height(500.dp)
+                        .fillMaxHeight(0.8f)
                 )
             }
 
@@ -392,7 +393,7 @@ class BackgroundModule : ComponentActivity() {
                             modifier = Modifier
                                 .size(80.dp)
                                 .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
+                                .background(bgColor)
                                 .padding(4.dp)
                                 .clickable {
                                     onConfirmation(false)
@@ -421,42 +422,94 @@ class BackgroundModule : ComponentActivity() {
 
                     }
 
+
+                }
+            }
+
+            Column(
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+                val halfScreenWidth = (screenWidth / 2)
+                System.out.println("HALFSCREENWIDTH= "+halfScreenWidth)
+                Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
+                LazyRow(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp))
+                ) {
+
                     item {
-                        Spacer(modifier = Modifier.width(35.dp)) // Add space between buttons
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray.copy(0.5f))
-                                .padding(4.dp)
-                                .clickable {
-                                    val resultIntent = Intent().apply {
-                                        putExtra("bgImageUri", imageUri)
+
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .background(appbarColor)
+                                    .clickable  {
+                                        onConfirmation(false)
                                     }
-                                    setResult(ComponentActivity.RESULT_OK, resultIntent)
-                                    finish()
-                                }
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
+
                             ) {
-                                Image(
-                                    painter = done_image  ,
-                                    contentDescription = "Your Icon Description",
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                )
-                                Text(
-                                    text = "Done",
-                                    color = Color.Black,
-                                    fontSize = 10.sp,
-                                    textAlign = TextAlign.Justify,
-                                    modifier = Modifier.padding(5.dp)
-                                )
+                                Column(
+                                    verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.editcancel),
+                                        contentDescription = "Your Icon Description",
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                    )
+                                    Text(
+                                        text = "Apply Color",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        textAlign = TextAlign.Justify,
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                }
                             }
-                        }
+
+                    }
+
+                    item {
+                        // ADD SPACER HERE
+
+                            Box(
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .background(appbarColor)
+                                    .clickable  {
+                                        val resultIntent = Intent().apply {
+                                            putExtra("bgImageUri", imageUri)
+                                        }
+                                        setResult(ComponentActivity.RESULT_OK, resultIntent)
+                                        finish()
+                                    }
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Image(
+                                        painter = painterResource(R.drawable.editcheck),
+                                        contentDescription = "Your Icon Description",
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                    )
+                                    Text(
+                                        text = "Color Picker",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        textAlign = TextAlign.Justify,
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                }
+                            }
+
                     }
                 }
 
@@ -464,20 +517,12 @@ class BackgroundModule : ComponentActivity() {
 
 
 
-            }
 
 
 
 
 
-
-
-
-
-
-
-
-        }
+        }   }
     }
 
 
