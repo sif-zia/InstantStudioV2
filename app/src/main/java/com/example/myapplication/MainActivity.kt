@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.net.Uri
+import androidx.compose.material3.SliderDefaults
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -226,12 +227,16 @@ fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
 }
 
 
+
+
 @Composable
 fun Brightness(navController: NavController) {
     var brightness by remember { mutableStateOf(1f) }
     val context = LocalContext.current
     val bitmapState = remember { mutableStateOf<Bitmap?>(null) }
     val imagePainter = rememberAsyncImagePainter(imageUri)
+    val done = painterResource(R.drawable.editcheck)
+    val cancel = painterResource(R.drawable.editcancel)
 
     // Load and modify the bitmap when brightness changes
     LaunchedEffect(brightness) {
@@ -260,6 +265,12 @@ fun Brightness(navController: NavController) {
                 )
             }
         }
+        val sliderColors = SliderDefaults.colors(
+            thumbColor = Color.Gray, // Color of the slider thumb
+            activeTrackColor = Color.Gray, // Color of the track to the right of the thumb
+            inactiveTrackColor = Color.Gray.copy(alpha = 0.5f), // Color of the track to the left of the thumb
+
+        )
 
         Slider(
             value = brightness,
@@ -270,24 +281,93 @@ fun Brightness(navController: NavController) {
             },
             valueRange = 0.3f..1.5f, // Adjust the range as needed
             steps = 10,
+            colors = sliderColors,
             modifier = Modifier.fillMaxWidth().padding(5.dp)
         )
 
-        Button(
-            onClick = {
-                bitmapState.value?.let { bitmap ->
-                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                    imageUri=updatedUri
 
-                    if (updatedUri != Uri.EMPTY) {
-                        navController.navigate("EditingScreen")
+        LazyRow(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier
+                .padding(18.dp)
+                .fillMaxWidth()
+        ) {
+
+            item {
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray)
+                        .padding(4.dp)
+                        .clickable { navController.navigate("EditingScreen") }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = cancel,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
+                        Text(
+                            text = "Cancel",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
                     }
                 }
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Done")
+            }
+
+            item {
+                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray)
+                        .padding(4.dp)
+                        .clickable {
+                            bitmapState.value?.let { bitmap ->
+                                val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
+                                imageUri=updatedUri
+
+                                if (updatedUri != Uri.EMPTY) {
+                                    navController.navigate("EditingScreen")
+                                }
+                            }
+                        }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = done,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
+                        Text(
+                            text = "Done",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
+            }
         }
+
     }
 }
 
@@ -316,6 +396,8 @@ fun Hue(navController: NavController) {
     val context = LocalContext.current
     val bitmapState = remember { mutableStateOf<Bitmap?>(null) }
     val imagePainter = rememberAsyncImagePainter(imageUri)
+    val done = painterResource(R.drawable.editcheck)
+    val cancel = painterResource(R.drawable.editcancel)
 
     // Load and modify the bitmap when saturation changes
     LaunchedEffect(saturation) {
@@ -347,6 +429,13 @@ fun Hue(navController: NavController) {
             }
         }
 
+        val sliderColors = SliderDefaults.colors(
+            thumbColor = Color.Gray, // Color of the slider thumb
+            activeTrackColor = Color.Gray, // Color of the track to the right of the thumb
+            inactiveTrackColor = Color.Gray.copy(alpha = 0.5f), // Color of the track to the left of the thumb
+
+        )
+
         Slider(
             value = saturation,
             onValueChange = { newSaturation ->
@@ -356,23 +445,90 @@ fun Hue(navController: NavController) {
             },
             valueRange = 0f..1f, // Adjust the range as needed
             steps = 25,
+            colors = sliderColors,
             modifier = Modifier.fillMaxWidth().padding(20.dp)
         )
 
-        Button(
-            onClick = {
-                bitmapState.value?.let { bitmap ->
-                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                    imageUri = updatedUri
+        LazyRow(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+        ) {
 
-                    if (updatedUri != Uri.EMPTY) {
-                        navController.navigate("EditingScreen")
+            item {
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray)
+                        .padding(4.dp)
+                        .clickable { navController.navigate("EditingScreen") }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = cancel,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
+                        Text(
+                            text = "Cancel",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
                     }
                 }
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Done")
+            }
+
+            item {
+                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray)
+                        .padding(4.dp)
+                        .clickable {
+                            bitmapState.value?.let { bitmap ->
+                                val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
+                                imageUri=updatedUri
+
+                                if (updatedUri != Uri.EMPTY) {
+                                    navController.navigate("EditingScreen")
+                                }
+                            }
+                        }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = done,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
+                        Text(
+                            text = "Done",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -414,6 +570,8 @@ fun BlackWhite(navController: NavController) {
     val context = LocalContext.current
     val bitmapState = remember { mutableStateOf<Bitmap?>(null) }
     val imagePainter = rememberAsyncImagePainter(imageUri)
+    val done = painterResource(R.drawable.editcheck)
+    val cancel = painterResource(R.drawable.editcancel)
 
     // Load and modify the bitmap when saturation changes
     LaunchedEffect(saturation) {
@@ -445,6 +603,13 @@ fun BlackWhite(navController: NavController) {
             }
         }
 
+        val sliderColors = SliderDefaults.colors(
+            thumbColor = Color.Gray, // Color of the slider thumb
+            activeTrackColor = Color.Gray, // Color of the track to the right of the thumb
+            inactiveTrackColor = Color.Gray.copy(alpha = 0.5f), // Color of the track to the left of the thumb
+
+        )
+
         Slider(
             value = saturation,
             onValueChange = { newSaturation ->
@@ -454,23 +619,90 @@ fun BlackWhite(navController: NavController) {
             },
             valueRange = 0f..1f, // Adjust the range as needed
             steps = 15,
+            colors = sliderColors,
             modifier = Modifier.fillMaxWidth().padding(20.dp)
         )
 
-        Button(
-            onClick = {
-                bitmapState.value?.let { bitmap ->
-                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                    imageUri = updatedUri
+        LazyRow(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+        ) {
 
-                    if (updatedUri != Uri.EMPTY) {
-                        navController.navigate("EditingScreen")
+            item {
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray)
+                        .padding(4.dp)
+                        .clickable { navController.navigate("EditingScreen") }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = cancel,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
+                        Text(
+                            text = "Cancel",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
                     }
                 }
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Done")
+            }
+
+            item {
+                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .clip(CircleShape)
+                        .background(Color.DarkGray)
+                        .padding(4.dp)
+                        .clickable {
+                            bitmapState.value?.let { bitmap ->
+                                val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
+                                imageUri=updatedUri
+
+                                if (updatedUri != Uri.EMPTY) {
+                                    navController.navigate("EditingScreen")
+                                }
+                            }
+                        }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = done,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier
+                                .size(28.dp)
+                        )
+                        Text(
+                            text = "Done",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -507,106 +739,6 @@ fun applyBlackWhite(bitmap: Bitmap?, saturation: Float): Bitmap? {
 }
 
 
-@Composable
-fun Blur(navController: NavController) {
-    val context = LocalContext.current
-    var blurRadius by remember { mutableStateOf(0f) }
-    val bitmapState = remember { mutableStateOf<Bitmap?>(null) }
-
-    // Initialize bitmapState with the modified bitmap when the composable is first called
-    DisposableEffect(imageUri) {
-        if (imageUri != null) {
-            val originalBitmap = uriToBitmap(context, imageUri!!)
-            bitmapState.value = applyBlur(originalBitmap, blurRadius)
-        }
-        onDispose { }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(600.dp)
-                .padding(20.dp)
-        ){
-            bitmapState.value?.let { bitmap ->
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Blurry Image",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .height(550.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                        .drawWithContent {
-                            drawContent()
-                            drawRect(
-                                brush = Brush.verticalGradient(
-                                    0f to Color.Transparent,
-                                    1f to Color.Black
-                                ),
-                                blendMode = BlendMode.DstOut
-                            )
-                        }
-                        .blur(blurRadius.dp)
-                )
-            }
-        }
-
-        Slider(
-            value = blurRadius,
-            onValueChange = { newBlurRadius ->
-                blurRadius = newBlurRadius
-                val originalBitmap = uriToBitmap(context, imageUri!!)
-                bitmapState.value = applyBlur(originalBitmap, newBlurRadius)
-            },
-            valueRange = 0f..25f,
-            steps = 15,
-            modifier = Modifier.fillMaxWidth().padding(20.dp)
-        )
-
-        Button(
-            onClick = {
-                bitmapState.value?.let { bitmap ->
-                    val updatedUri = bitmapToUri(context, bitmap.asImageBitmap())
-                    imageUri = updatedUri
-
-                    if (updatedUri != Uri.EMPTY) {
-                        navController.navigate("EditingScreen")
-                    }
-                }
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Done")
-        }
-    }
-}
-
-
-fun applyBlur(bitmap: Bitmap?, blurRadius: Float): Bitmap? {
-    if (bitmap == null) return null // Check if the bitmap is null and return null immediately
-
-    return if (blurRadius > 0) {
-        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width / 4, bitmap.height / 4, false)
-        val blurredBitmap = Bitmap.createBitmap(scaledBitmap.width, scaledBitmap.height, Bitmap.Config.ARGB_8888)
-
-        val canvas = Canvas(blurredBitmap)
-        val paint = Paint().apply {
-            isAntiAlias = true
-            maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
-        }
-
-        canvas.drawBitmap(scaledBitmap, 0f, 0f, paint)
-        blurredBitmap
-    } else {
-        bitmap.copy(bitmap.config, true)
-    }
-}
 
 
 fun bitmapToUri(context: Context, bitmap: ImageBitmap): Uri {
