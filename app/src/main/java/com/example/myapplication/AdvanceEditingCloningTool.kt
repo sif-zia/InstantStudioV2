@@ -107,8 +107,7 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                     val cancel = painterResource(R.drawable.editcancel)
                     val reset = painterResource(R.drawable.reseticon)
                     val clone = painterResource(R.drawable.clone)
-                    val select = painterResource(R.drawable.crop2)
-                    val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
+                    val select = painterResource(R.drawable.polygon_select)
 
                     val gradientcolors = listOf(
                         Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
@@ -426,7 +425,7 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier.fillMaxSize()
                                     ) {
-                                        if(!isSelecting) {
+                                        if(isSelecting) {
                                             Image(
                                                 painter = clone,
                                                 contentDescription = "Your Icon Description",
@@ -444,7 +443,7 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                                         }
                                         else {
                                             Image(
-                                                painter = clone,
+                                                painter = select,
                                                 contentDescription = "Your Icon Description",
                                                 modifier = Modifier
                                                     .size(28.dp)
@@ -469,6 +468,8 @@ class AdvanceEditingCloningTool : ComponentActivity() {
                                         .background(appbarColor)
                                         .clickable {
                                             pasteCoordinates = Offset.Unspecified
+                                            copyCoordinates = Offset.Unspecified
+                                            isSelecting = true
                                         }
                                 ) {
                                     Column(

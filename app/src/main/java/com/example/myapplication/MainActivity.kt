@@ -3,7 +3,6 @@ package com.example.myapplication
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
@@ -29,12 +28,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,17 +73,11 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.provider.MediaStore
-import android.widget.Toast
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -921,7 +912,6 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
             crrImageUri = drawnImageUri
             imageUri = drawnImageUri
             sharedViewModel.setImageUri(drawnImageUri)
-            Toast.makeText(context, "Drawing Applied", Toast.LENGTH_LONG).show()
         }
     }
     val aECloningToolLauncher = rememberLauncherForActivityResult(LaunchAEModuleCloningToolContract()) { clonedImageUri ->
@@ -930,9 +920,10 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
             crrImageUri = clonedImageUri
             imageUri = clonedImageUri
             sharedViewModel.setImageUri(clonedImageUri)
-            Toast.makeText(context, "Cloning Applied", Toast.LENGTH_LONG).show()
         }
     }
+
+    CommonAppBar(title = "Advanced Editing")
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -956,25 +947,29 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
     }
 
     Column(
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(0.2f))
+
         LazyRow(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Bottom,
             modifier = Modifier
                 .padding(18.dp)
-                .fillMaxWidth()
-                .padding(bottom = 10.dp).clip(RoundedCornerShape(35.dp))
+                .padding(bottom = 10.dp)
+                .clip(RoundedCornerShape(8.dp))
         ) {
 
             item {
-
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
+                        .clickable {
+                            aECloningToolLauncher.launch(imageUri)
+                        }
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -986,14 +981,13 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
                             contentDescription = "Your Icon Description",
                             modifier = Modifier
                                 .size(28.dp)
-                                .clickable { aECloningToolLauncher.launch(imageUri) }
                         )
                         Text(
                             text = "Clone",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
                 }
@@ -1003,23 +997,24 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
+                        .clickable {
+                            aEPenToolLauncher.launch(imageUri)
+                        }
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                        verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Image(
                             painter = pen,
                             contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clickable { aEPenToolLauncher.launch(imageUri) }
+                            modifier = Modifier.size(28.dp)
                         )
                         Text(
-                            text = "Pen",
-                            color = Color.Black,
+                            text = "Draw",
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
@@ -1066,7 +1061,6 @@ fun CropSelection(navController: NavController, sharedViewModel: SharedViewModel
             currentImageUri = croppedImageUri
             imageUri = croppedImageUri
             sharedViewModel.setImageUri(croppedImageUri)
-            Toast.makeText(context, "Image Cropped", Toast.LENGTH_LONG).show()
         }
     }
     val selectionModuleLauncher = rememberLauncherForActivityResult(LaunchSelectionModuleContract()) { croppedImageUri ->
@@ -1075,7 +1069,6 @@ fun CropSelection(navController: NavController, sharedViewModel: SharedViewModel
             currentImageUri = croppedImageUri
             imageUri = croppedImageUri
             sharedViewModel.setImageUri(croppedImageUri)
-            Toast.makeText(context, "Sticker Pasted", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -1618,7 +1611,7 @@ fun StudioFont(isImageUploaded: Boolean) {
 fun UploadImage(onImageUploaded: (Uri) -> Unit) {
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
 
-    var imageUri by remember {
+    var selectedImageUri by remember {
         mutableStateOf<Uri?>(null)
     }
 
@@ -1626,7 +1619,7 @@ fun UploadImage(onImageUploaded: (Uri) -> Unit) {
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
             uri?.let {
-                imageUri = it
+                selectedImageUri = it
                 onImageUploaded(it)
             }
         }
@@ -1678,7 +1671,7 @@ fun UploadImage(onImageUploaded: (Uri) -> Unit) {
                     tint = Color.White
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                if(imageUri!=null){
+                if(selectedImageUri!=null){
                     Text(
                         text = "Reselect",
                         color = Color.White,
