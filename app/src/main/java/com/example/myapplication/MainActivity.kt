@@ -1214,25 +1214,23 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
         }
     }
 
+
     Column(
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.Start
     ) {
         Spacer(modifier = Modifier.weight(0.2f))
         LazyRow(
-            horizontalArrangement = Arrangement.Start,
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.padding(18.dp)
+            modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(35.dp))
         ) {
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                         .clickable { navController.navigate(route = "Basic") }
                 ) {
                     Column(
@@ -1250,26 +1248,22 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                             text = "Light",
                             color = Color.Black,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                         .clickable { filterModuleLauncher.launch(currentEditingImageUri) }
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                        verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -1284,75 +1278,6 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                             text = "Filters",
                             color = Color.Black,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
-                        .clickable { navController.navigate(route = "Advanced") }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = adv,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-
-                        )
-                        Text(
-                            text = "Advanced",
-                            color = Color.Black,
-                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                        )
-                    }
-                }
-            }
-
-            item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
-                        .clickable { fgModuleLauncher.launch(currentEditingImageUri) }
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = fgc,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-
-                        )
-                        Text(
-                            text = "FG Color",
-                            color = Color.Black,
-                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
                         )
@@ -1361,17 +1286,70 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
             }
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
+                        .clickable { navController.navigate(route = "Advanced") }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = adv,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = "Advanced",
+                            color = Color.Black,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color.DarkGray)
+                        .clickable { fgModuleLauncher.launch(currentEditingImageUri) }
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = fgc,
+                            contentDescription = "Your Icon Description",
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            text = "FG Color",
+                            color = Color.Black,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+                }
+            }
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                         .clickable { bgModuleLauncher.launch(currentEditingImageUri) }
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                        verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -1380,32 +1358,27 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                             contentDescription = "Your Icon Description",
                             modifier = Modifier
                                 .size(28.dp)
-
                         )
                         Text(
                             text = "BG Color",
                             color = Color.Black,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                         .clickable { navController.navigate(route = "CropSelection") }
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                        verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -1420,9 +1393,8 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                             text = "Crop",
                             color = Color.Black,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
                 }
