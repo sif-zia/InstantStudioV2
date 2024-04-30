@@ -34,7 +34,7 @@ fun CommonAppBar(title: String, modifier: Modifier = Modifier) {
 //    },
         title = { Text(text = title) },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.DarkGray,
+            containerColor = Color(25,56,106),
             titleContentColor = Color.White),
         modifier = modifier
     )

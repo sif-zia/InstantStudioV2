@@ -6,9 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.net.Uri
-import androidx.compose.material3.SliderDefaults
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -67,37 +65,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import com.example.myapplication.ui.theme.MyApplicationTheme
-import com.github.skydoves.colorpicker.compose.AlphaSlider
-import com.github.skydoves.colorpicker.compose.AlphaTile
-import com.github.skydoves.colorpicker.compose.BrightnessSlider
-import com.github.skydoves.colorpicker.compose.ColorEnvelope
-import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.FormBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.util.concurrent.TimeUnit
-import android.os.Handler
-import android.os.Looper
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
-import android.graphics.ColorFilter
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
@@ -106,14 +80,15 @@ import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.contract.LaunchAEModuleCloningToolContract
@@ -130,7 +105,9 @@ import kotlin.math.sin
 
 
 var imageUri: Uri? = null
-
+var bgColor = Color(12,32,63)
+var fontColor = Color.White
+var appbarColor = Color(25,56,106)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,10 +118,11 @@ class MainActivity : ComponentActivity() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(0.dp)
-            ) {
-                ImageCard(painter = painter, contentDescription = ".")
-            }
+                    .background(bgColor)
+            )
+//            {
+//                ImageCard(painter = painter, contentDescription = ".")
+//            }
             App()
         }
     }
@@ -176,7 +154,6 @@ fun App(){
             BlackWhite(navController)
         }
 
-
         composable(route="Clone"){
             Clone(navController)
         }
@@ -203,7 +180,7 @@ fun App(){
 
         composable(route="LandingScreen"){
             var showStudioFont by remember { mutableStateOf(true) }
-            StudioFont()
+            StudioFont(isImageUploaded)
 
             UploadImage(onImageUploaded = { uri ->
                 imageUri = uri
@@ -225,8 +202,6 @@ fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
         null
     }
 }
-
-
 
 
 @Composable
@@ -738,9 +713,6 @@ fun applyBlackWhite(bitmap: Bitmap?, saturation: Float): Bitmap? {
     return mutableBitmap
 }
 
-
-
-
 fun bitmapToUri(context: Context, bitmap: ImageBitmap): Uri {
     // Generate a unique file name for the cropped image
     val timestamp = System.currentTimeMillis()
@@ -836,7 +808,7 @@ fun Basic(navController: NavController){
                             color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) 
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
                 }
@@ -909,8 +881,6 @@ fun Basic(navController: NavController){
         }
     }
 }
-
-
 @Composable
 fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
@@ -1231,12 +1201,12 @@ fun getImageUri(inContext: Context, inImage: Bitmap): Uri {
 @Composable
 fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: SharedViewModel) {
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
-    val bright = painterResource(R.drawable.sat)
-    val crop = painterResource(R.drawable.crop)
-    val fgc = painterResource(R.drawable.fgc)
-    val bgc = painterResource(R.drawable.bgc)
-    val adv = painterResource(R.drawable.advanced)
-    val filter = painterResource(R.drawable.filters)
+    val bright = painterResource(R.drawable.outline_exposure_24)
+    val crop = painterResource(R.drawable.outline_photo_size_select_large_24)
+    val fgc = painterResource(R.drawable.outline_foreground_24)
+    val bgc = painterResource(R.drawable.background_24)
+    val adv = painterResource(R.drawable.outline_advance_24)
+    val filter = painterResource(R.drawable.outline_filter_frames_24)
     val context = LocalContext.current
     val imageBitmap: Bitmap? = com.example.myapplication.imageUri?.let { uriToBitmap2(context, it) }
 
@@ -1280,22 +1250,16 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
     ) {
         Box()
         {
-            if (imageBitmap != null)
-                SaveButton(context, imageBitmap, navController)
-            Row(
-                modifier = Modifier.fillMaxHeight(0.9f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = rememberAsyncImagePainter(currentEditingImageUri),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .height(550.dp)
-                )
-            }
+        if (imageBitmap != null)
+            SaveButton(context, imageBitmap, navController)
+        Image(
+                painter = rememberAsyncImagePainter(currentEditingImageUri),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(top = 84.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.8f)
+            )
         }
     }
 
@@ -1308,14 +1272,14 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
         LazyRow(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.Bottom,
-            modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(35.dp))
+            modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp))
         ) {
 
             item {
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
                         .clickable { navController.navigate(route = "Basic") }
                 ) {
                     Column(
@@ -1344,7 +1308,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
                         .clickable { filterModuleLauncher.launch(currentEditingImageUri) }
                 ) {
                     Column(
@@ -1361,7 +1325,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                         )
                         Text(
                             text = "Filters",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
@@ -1374,7 +1338,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
                         .clickable { navController.navigate(route = "Advanced") }
                 ) {
                     Column(
@@ -1389,7 +1353,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                         )
                         Text(
                             text = "Advanced",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
@@ -1402,7 +1366,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
                         .clickable { fgModuleLauncher.launch(currentEditingImageUri) }
                 ) {
                     Column(
@@ -1417,7 +1381,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                         )
                         Text(
                             text = "FG Color",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
@@ -1430,7 +1394,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
                         .clickable { bgModuleLauncher.launch(currentEditingImageUri) }
                 ) {
                     Column(
@@ -1446,7 +1410,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                         )
                         Text(
                             text = "BG Color",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
@@ -1459,7 +1423,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                 Box(
                     modifier = Modifier
                         .size(60.dp)
-                        .background(Color.DarkGray)
+                        .background(appbarColor)
                         .clickable { navController.navigate(route = "CropSelection") }
                 ) {
                     Column(
@@ -1476,7 +1440,7 @@ fun EditingScreen(navController: NavController,imageUri: Uri, sharedViewModel: S
                         )
                         Text(
                             text = "Crop",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp)
@@ -1508,24 +1472,20 @@ fun NextButton(navController: NavController) {
                 .padding(15.dp)
         ) {
 
-            TextButton(
-                onClick = {
-                    navController.navigate(route = "EditingScreen")
-                    },
+            Row(
                 modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(50))
-                    .background(Color.DarkGray)
+                    .background(
+                        color = appbarColor,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable(onClick = {navController.navigate(route = "EditingScreen")}),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Next",
                     color = Color.White,
-                    fontSize = 15.sp,
-                    fontFamily = merriFont,
-                    fontWeight = FontWeight.Thin,
-                    fontStyle = FontStyle.Normal,
-                    textAlign = TextAlign.Center
+                    fontSize = 19.sp
                 )
             }
         }}
@@ -1571,7 +1531,7 @@ fun ImageCard(
 
 
 @Composable
-fun StudioFont() {
+fun StudioFont(isImageUploaded: Boolean) {
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
 
     val gradientcolors = listOf(
@@ -1581,7 +1541,6 @@ fun StudioFont() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(10.dp)
             .background(brush = Brush.verticalGradient(gradientcolors))
     ) {
         Column(
@@ -1593,37 +1552,39 @@ fun StudioFont() {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color.White,
-                                fontSize = 60.sp,
-                                fontFamily = merriFont
-                            )
-                        ) {
-                            append("I")
-                        }
-                        append("nstant ")
-                        withStyle(
-                            style = SpanStyle(
-                                color = Color.White,
-                                fontSize = 60.sp,
-                                fontFamily = merriFont
-                            )
-                        ) {
-                            append("S")
-                        }
-                        append("tudio")
-                    },
-                    fontSize = 45.sp,
-                    color = Color.White.copy(0.9f),
-                    fontFamily =merriFont,
-                    fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Normal,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 8.dp) // Add padding to center vertically
-                )
+                if(!isImageUploaded) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color.White,
+                                    fontSize = 60.sp,
+                                    fontFamily = merriFont
+                                )
+                            ) {
+                                append("I")
+                            }
+                            append("nstant ")
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Color.White,
+                                    fontSize = 60.sp,
+                                    fontFamily = merriFont
+                                )
+                            ) {
+                                append("S")
+                            }
+                            append("tudio")
+                        },
+                        fontSize = 45.sp,
+                        color = Color.White.copy(0.9f),
+                        fontFamily = merriFont,
+                        fontWeight = FontWeight.Light,
+                        fontStyle = FontStyle.Normal,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 8.dp) // Add padding to center vertically
+                    )
+                }
             }
         }
     }
@@ -1661,9 +1622,8 @@ fun UploadImage(onImageUploaded: (Uri) -> Unit) {
                 contentDescription = null,
                 modifier = Modifier
                     .padding(top = 55.dp)
-                    .width(360.dp)
                     .fillMaxWidth()
-                    .height(600.dp)
+                    .fillMaxHeight(0.8f)
                     .align(Alignment.CenterHorizontally)
             )
         }
@@ -1679,25 +1639,36 @@ fun UploadImage(onImageUploaded: (Uri) -> Unit) {
                 .height(200.dp)
                 .padding(10.dp)
         ) {
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(Color.DarkGray)
-                    .clickable { // Make the whole box clickable
-                        galleryLauncher.launch("image/*")
-                    }
+                    .background(
+                        color = appbarColor,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable(onClick = {galleryLauncher.launch("image/*") }),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    color = Color.White,
-                    fontSize = 40.sp,
-                    fontFamily = merriFont,
-                    fontWeight = FontWeight.Thin,
-                    fontStyle = FontStyle.Normal,
-                    textAlign = TextAlign.Center,
-                    text = "+",
-                    modifier = Modifier.align(Alignment.Center)
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_arrow_upward_24),
+                    contentDescription = null,
+                    tint = Color.White
                 )
+                Spacer(modifier = Modifier.width(6.dp))
+                if(imageUri!=null){
+                    Text(
+                        text = "Reselect",
+                        color = Color.White,
+                        fontSize = 19.sp
+                    )
+                }
+                else {
+                    Text(
+                        text = "Import",
+                        color = Color.White,
+                        fontSize = 19.sp
+                    )
+                }
             }
         }
     }
@@ -1733,32 +1704,29 @@ fun SaveButton(context: Context, imageBitmap: Bitmap, navController: NavControll
                 .width(120.dp)
                 .padding(15.dp)
         ) {
-
-            TextButton(
-                onClick = {
-                    val bytes = ByteArrayOutputStream()
-                    imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-                    val path =
-                        MediaStore.Images.Media.insertImage(context.contentResolver, imageBitmap, "Title", null)
-                    Uri.parse(path)
-                    System.out.println("ABOUT TO SAVE IMAGE URI: ")
-
-                    navController.navigate(route = "LandingScreen")
-                },
+            Row(
                 modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(50))
-                    .background(Color.DarkGray)
+                    .background(
+                        color = appbarColor,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .clickable(onClick = {
+                        val bytes = ByteArrayOutputStream()
+                        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
+                        val path =
+                            MediaStore.Images.Media.insertImage(context.contentResolver, imageBitmap, "Title", null)
+                        Uri.parse(path)
+                        System.out.println("ABOUT TO SAVE IMAGE URI: ")
+
+                        navController.navigate(route = "LandingScreen")
+                    }),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Save",
                     color = Color.White,
-                    fontSize = 15.sp,
-                    fontFamily = merriFont,
-                    fontWeight = FontWeight.Thin,
-                    fontStyle = FontStyle.Normal,
-                    textAlign = TextAlign.Center
+                    fontSize = 19.sp
                 )
             }
         }}
