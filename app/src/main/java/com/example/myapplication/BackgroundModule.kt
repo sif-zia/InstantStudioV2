@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.modifier.modifierLocalProvider
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -85,8 +86,8 @@ class BackgroundModule : ComponentActivity() {
             var fgImage by remember { mutableStateOf<ImageBitmap?>(null) }
 
             val context = LocalContext.current
-            val bgc = painterResource(R.drawable.bgc)
-            val adv = painterResource(R.drawable.advanced)
+            val bgc = painterResource(R.drawable.baseline_account_box_24)
+            val adv = painterResource(R.drawable.baseline_color_lens_24)
             var isBoxVisible by remember { mutableStateOf(true) }
             var isBoxVisible2 by remember { mutableStateOf(true) }
             var isBoxVisible3 by remember { mutableStateOf(true) }
@@ -182,27 +183,28 @@ class BackgroundModule : ComponentActivity() {
 
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                // Other content goes here
-
-                // Place the LazyRow just above the bottom of the screen
+            Column(
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.Start
+            ) {
+                val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+                val halfScreenWidth = (screenWidth / 2)
+                System.out.println("HALFSCREENWIDTH= "+halfScreenWidth)
+                Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
                 LazyRow(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter) // Align to the bottom
-                        .padding(start = 0.dp, bottom = 16.dp), // Add padding to leave space from the bottom
-                    horizontalArrangement = Arrangement.Center // Center align the items horizontally
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.padding(25.dp).padding(bottom = 15.dp)
+                        .clip(RoundedCornerShape(15.dp)).align(Alignment.CenterHorizontally)
                 ) {
 
                     item {
-                        Spacer(modifier = Modifier.width(15.dp)) // Add space between buttons
                         if (isBoxVisible2 && isBoxVisible4) {
                             Box(
                                 modifier = Modifier
                                     .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.LightGray.copy(0.5f))
-                                    .padding(4.dp)
-                                    .clickable {
+                                    .background(Color.DarkGray)
+                                    .clickable  {
                                         if (hexCode.length == 8) {
                                             isBoxVisible2 = false
                                             isBoxVisible = false
@@ -272,6 +274,7 @@ class BackgroundModule : ComponentActivity() {
                                                 .show()
                                         }
                                     }
+
                             ) {
                                 Column(
                                     verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -286,10 +289,10 @@ class BackgroundModule : ComponentActivity() {
                                     )
                                     Text(
                                         text = "Apply Color",
-                                        color = Color.Black,
+                                        color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Justify,
-                                        modifier = Modifier.padding(5.dp)
+                                        modifier = Modifier.padding(5.dp).padding(bottom = 10.dp)
                                     )
                                 }
                             }
@@ -297,16 +300,13 @@ class BackgroundModule : ComponentActivity() {
                     }
 
                     item {
-                        Spacer(modifier = Modifier.width(35.dp)) // Add space between buttons
-
+                        // ADD SPACER HERE
                         if (isBoxVisible && isBoxVisible3) {
                             Box(
                                 modifier = Modifier
                                     .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.LightGray.copy(0.5f))
-                                    .padding(4.dp)
-                                    .clickable {
+                                    .background(Color.DarkGray)
+                                    .clickable  {
                                         isBoxVisible2 = false
                                         isBoxVisible = false
                                         isColorPickerVisible = true
@@ -322,28 +322,19 @@ class BackgroundModule : ComponentActivity() {
                                         contentDescription = "Your Icon Description",
                                         modifier = Modifier
                                             .size(28.dp)
-
                                     )
-
                                     Text(
                                         text = "Color Picker",
-                                        color = Color.Black,
+                                        color = Color.White,
                                         fontSize = 10.sp,
-                                        //                            fontWeight = FontWeight.Bold,
                                         textAlign = TextAlign.Justify,
-                                        modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        modifier = Modifier.padding(5.dp).padding(bottom = 10.dp)
                                     )
                                 }
                             }
-
                         }
                     }
                 }
-
-
-
-
-
             }
 
 
