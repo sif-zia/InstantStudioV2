@@ -175,9 +175,6 @@ fun App(){
             BlackWhite(navController)
         }
 
-        composable(route="Blur"){
-            Blur(navController)
-        }
 
         composable(route="Clone"){
             Clone(navController)
@@ -644,9 +641,8 @@ fun bitmapToUri(context: Context, bitmap: ImageBitmap): Uri {
 fun Basic(navController: NavController){
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
     val exp = painterResource(R.drawable.exp)
-    val contrast = painterResource(R.drawable.contrast)
-    val saturation = painterResource(R.drawable.saturation)
-    val black = painterResource(R.drawable.advanced)
+    val hue = painterResource(R.drawable.blur)
+    val black = painterResource(R.drawable.contrast)
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -670,26 +666,26 @@ fun Basic(navController: NavController){
 
     Column(
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.CenterHorizontally // Align to the center horizontally
     ) {
         Spacer(modifier = Modifier.weight(0.2f))
         LazyRow(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(18.dp)
+                .padding(bottom = 10.dp, start = 78.dp)
+                .width(200.dp)
                 .fillMaxWidth()
-        ) {
-
+                .clip(RoundedCornerShape(35.dp))
+        ){
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
+
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -705,11 +701,10 @@ fun Basic(navController: NavController){
                         )
                         Text(
                             text = "Exposure",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                            modifier = Modifier.padding(5.dp) 
                         )
                     }
                 }
@@ -717,13 +712,11 @@ fun Basic(navController: NavController){
 
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                 ) {
                     Column(
                         verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -739,7 +732,7 @@ fun Basic(navController: NavController){
                         )
                         Text(
                             text = "B&W",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
 //                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
@@ -751,21 +744,19 @@ fun Basic(navController: NavController){
 
 
             item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
+
                 Box(
                     modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
+                        .size(60.dp)
+                        .background(Color.DarkGray)
                 ) {
                     Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                        verticalArrangement = Arrangement.Bottom,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxSize()
                     ) {
                         Image(
-                            painter = contrast,
+                            painter = hue,
                             contentDescription = "Your Icon Description",
                             modifier = Modifier
                                 .size(28.dp)
@@ -773,9 +764,8 @@ fun Basic(navController: NavController){
                         )
                         Text(
                             text = "Hue",
-                            color = Color.Black,
+                            color = Color.White,
                             fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Justify,
                             modifier = Modifier.padding(5.dp) // Add padding at the bottom
                         )
@@ -783,38 +773,7 @@ fun Basic(navController: NavController){
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(0.5f))
-                        .padding(4.dp)
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = saturation,
-                            contentDescription = "Your Icon Description",
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clickable { navController.navigate(route = "Blur") }
-                        )
-                        Text(
-                            text = "Blur",
-                            color = Color.Black,
-                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Justify,
-                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                        )
-                    }
-                }
-            }
+
         }
     }
 }
