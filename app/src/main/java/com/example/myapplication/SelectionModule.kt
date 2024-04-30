@@ -501,8 +501,8 @@ class SelectionModule : ComponentActivity() {
         }
         else{
             ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
-            scaledWidth = (newWidth.toFloat()-offsetX)*ratio
-            scaledHeight = newWidth.toFloat()-offsetX
+            scaledWidth = newWidth.toFloat()-offsetX
+            scaledHeight = (newWidth.toFloat()-offsetX)*(1/ratio)
         }
 
         return Bitmap.createScaledBitmap(bitmap, scaledWidth.toInt() , scaledHeight.toInt() , true)

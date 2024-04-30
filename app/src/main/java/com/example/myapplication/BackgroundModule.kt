@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
@@ -94,13 +95,18 @@ class BackgroundModule : ComponentActivity() {
             var isBoxVisible4 by remember { mutableStateOf(true) }
 
 
+            val gradientcolors = listOf(
+                Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
+            )
+            var bgColor = Color(12,32,63)
+            var appbarColor = Color(25,56,106)
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(5.dp)
-            ) {
-                ImageCard(painter = painter, contentDescription = ".")
-            }
+                    .background(bgColor)
+
+            )
 
             var decodedImage: Bitmap? = null
 
@@ -135,7 +141,7 @@ class BackgroundModule : ComponentActivity() {
 
             CommonAppBar(title = "Background Color", modifier = Modifier.background(color = Color.DarkGray))
 
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(brush = Brush.verticalGradient(gradientcolors))) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -185,7 +191,7 @@ class BackgroundModule : ComponentActivity() {
 
             Column(
                 verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                 val halfScreenWidth = (screenWidth / 2)
@@ -194,16 +200,15 @@ class BackgroundModule : ComponentActivity() {
                 LazyRow(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.padding(25.dp).padding(bottom = 15.dp)
-                        .clip(RoundedCornerShape(15.dp)).align(Alignment.CenterHorizontally)
+                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp))
                 ) {
 
                     item {
                         if (isBoxVisible2 && isBoxVisible4) {
                             Box(
                                 modifier = Modifier
-                                    .size(80.dp)
-                                    .background(Color.DarkGray)
+                                    .size(60.dp)
+                                    .background(appbarColor)
                                     .clickable  {
                                         if (hexCode.length == 8) {
                                             isBoxVisible2 = false
@@ -292,7 +297,7 @@ class BackgroundModule : ComponentActivity() {
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Justify,
-                                        modifier = Modifier.padding(5.dp).padding(bottom = 10.dp)
+                                        modifier = Modifier.padding(5.dp)
                                     )
                                 }
                             }
@@ -304,8 +309,8 @@ class BackgroundModule : ComponentActivity() {
                         if (isBoxVisible && isBoxVisible3) {
                             Box(
                                 modifier = Modifier
-                                    .size(80.dp)
-                                    .background(Color.DarkGray)
+                                    .size(60.dp)
+                                    .background(appbarColor)
                                     .clickable  {
                                         isBoxVisible2 = false
                                         isBoxVisible = false
@@ -328,7 +333,7 @@ class BackgroundModule : ComponentActivity() {
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Justify,
-                                        modifier = Modifier.padding(5.dp).padding(bottom = 10.dp)
+                                        modifier = Modifier.padding(5.dp)
                                     )
                                 }
                             }
