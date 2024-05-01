@@ -204,8 +204,10 @@ class ForegroundModule : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
+                                .width(100.dp)
                                 .background(appbarColor)
-                                .clickable  {
+                                .clickable
+                                {
                                     if (hexCode.length == 8) {
                                         isBoxVisible2 = false
                                         isBoxVisible = false
@@ -292,7 +294,7 @@ class ForegroundModule : ComponentActivity() {
                                     text = "Apply Color",
                                     color = Color.White,
                                     fontSize = 10.sp,
-                                    textAlign = TextAlign.Justify,
+                                    textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(5.dp)
                                 )
                             }
@@ -306,6 +308,7 @@ class ForegroundModule : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
+                                .width(100.dp)
                                 .background(appbarColor)
                                 .clickable  {
                                     isBoxVisible2 = false
@@ -328,7 +331,7 @@ class ForegroundModule : ComponentActivity() {
                                     text = "Color Picker",
                                     color = Color.White,
                                     fontSize = 10.sp,
-                                    textAlign = TextAlign.Justify,
+                                    textAlign = TextAlign.Center,
                                     modifier = Modifier.padding(5.dp)
                                 )
                             }

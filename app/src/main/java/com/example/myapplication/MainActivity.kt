@@ -918,7 +918,7 @@ fun Advanced(navController: NavController, sharedViewModel: SharedViewModel){
     val merriFont = FontFamily(Font(R.font.merri, FontWeight.Normal))
 //    val imageUriVM by sharedViewModel.imageUri.observeAsState(initial = Uri.EMPTY)
     var crrImageUri: Uri? by remember { mutableStateOf(imageUri) }
-    val pen = painterResource(R.drawable.clone)
+    val pen = painterResource(R.drawable.pen)
     val clone = painterResource(R.drawable.clone)
     val context = LocalContext.current
 

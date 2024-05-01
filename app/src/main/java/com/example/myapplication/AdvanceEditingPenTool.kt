@@ -409,7 +409,7 @@ class AdvanceEditingPenTool : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(0.7f)),
+                                .background(bgColor.copy(0.7f)),
                             contentAlignment = Alignment.Center
                         ) {
                             HarmonyColorPicker(harmonyMode = ColorHarmonyMode.SHADES,

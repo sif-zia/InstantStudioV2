@@ -228,6 +228,7 @@ class CroppingModule : ComponentActivity() {
                                     Box(
                                         modifier = Modifier
                                             .size(60.dp)
+                                            .width(80.dp)
                                             .background(appbarColor)
                                             .clickable { isSetting = true }
                                     ) {
@@ -403,13 +404,13 @@ class CroppingModule : ComponentActivity() {
                                 ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.editcheck),
-                                        contentDescription = "Paste",
+                                        contentDescription = "Done",
                                         modifier = Modifier
                                             .size(28.dp)
 
                                     )
                                     Text(
-                                        text = "Paste",
+                                        text = "Done",
                                         color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Center,

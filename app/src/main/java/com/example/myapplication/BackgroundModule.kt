@@ -208,6 +208,7 @@ class BackgroundModule : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .size(60.dp)
+                                    .width(100.dp)
                                     .background(appbarColor)
                                     .clickable  {
                                         if (hexCode.length == 8) {
@@ -296,7 +297,7 @@ class BackgroundModule : ComponentActivity() {
                                         text = "Apply Color",
                                         color = Color.White,
                                         fontSize = 10.sp,
-                                        textAlign = TextAlign.Justify,
+                                        textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(5.dp)
                                     )
                                 }
@@ -310,6 +311,7 @@ class BackgroundModule : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .size(60.dp)
+                                    .width(100.dp)
                                     .background(appbarColor)
                                     .clickable  {
                                         isBoxVisible2 = false
@@ -332,7 +334,7 @@ class BackgroundModule : ComponentActivity() {
                                         text = "Color Picker",
                                         color = Color.White,
                                         fontSize = 10.sp,
-                                        textAlign = TextAlign.Justify,
+                                        textAlign = TextAlign.Center,
                                         modifier = Modifier.padding(5.dp)
                                     )
                                 }
