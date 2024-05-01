@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Instant Studio</string>
     <string name="package_name">com.example.myapplication</string>
     <string name="title_activity_advance_editing_cloning_tool">AdvanceEditingCloningTool</string>
     <string name="title_activity_advance_editing_pen_tool">AdvanceEditingPenTool</string>
