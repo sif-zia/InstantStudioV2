@@ -20,6 +20,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -29,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
@@ -87,6 +89,12 @@ class SelectionModule : ComponentActivity() {
 
             var padding by remember { mutableFloatStateOf(16f) }
 
+            val gradientcolors = listOf(
+                Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
+            )
+            var bgColor = Color(12,32,63)
+            var appbarColor = Color(25,56,106)
+
             LaunchedEffect(imageUri) {
                 selectedImageBitmap = try {
                     loadImageBitmap(context, imageUri)
@@ -97,222 +105,280 @@ class SelectionModule : ComponentActivity() {
                 originalHeight = selectedImageBitmap!!.height
                 originalImageBitmap = selectedImageBitmap
             }
-            Column{
-                CommonAppBar(title = "Sticker Selection", modifier = Modifier.background(color = Color.DarkGray))
+            Column(modifier=Modifier.background(bgColor)){
+                CommonAppBar(title = "Sticker Selection")
                 Spacer(modifier = Modifier.fillMaxHeight(0.1f))
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxHeight(0.8f)
-                        .drawWithContent {
-                            drawContent()
-                            width = size.width.toInt()
-                            height = size.height.toInt()
-                        }
-                ) {
-                    selectedImageBitmap?.let {
-                        Image(
-                            bitmap = it,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .padding(horizontal = padding.pxToDp().dp)
-                                .clipToBounds()
-                                .fillMaxWidth()
-                                .pointerInput(Unit) {
-                                    detectTapGestures { offset ->
-                                        if(isPolygon || isFreehand) {
-                                            val point = Pair(offset.x, offset.y)
-                                            if (!isSelected && isPolygon) {
-                                                tappedPoints.add(point)
-                                                tapPosition = point
+                Column(modifier = Modifier.background(brush = Brush.verticalGradient(gradientcolors))) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxHeight(0.8f)
+                            .drawWithContent {
+                                drawContent()
+                                width = size.width.toInt()
+                                height = size.height.toInt()
+                            }
+                    ) {
+                        selectedImageBitmap?.let {
+                            Image(
+                                bitmap = it,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .padding(horizontal = padding.pxToDp().dp)
+                                    .clipToBounds()
+                                    .fillMaxWidth()
+                                    .pointerInput(Unit) {
+                                        detectTapGestures { offset ->
+                                            if (isPolygon || isFreehand) {
+                                                val point = Pair(offset.x, offset.y)
+                                                if (!isSelected && isPolygon) {
+                                                    tappedPoints.add(point)
+                                                    tapPosition = point
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                .pointerInput(Unit) {
-                                    detectDragGestures { change, dragAmount ->
-                                        change.consume()
-                                        if(isPolygon || isFreehand) {
-                                            if (!isSelected && isFreehand) {
-                                                tappedPoints.add(
-                                                    Pair(
-                                                        change.position.x,
-                                                        change.position.y
+                                    .pointerInput(Unit) {
+                                        detectDragGestures { change, dragAmount ->
+                                            change.consume()
+                                            if (isPolygon || isFreehand) {
+                                                if (!isSelected && isFreehand) {
+                                                    tappedPoints.add(
+                                                        Pair(
+                                                            change.position.x,
+                                                            change.position.y
+                                                        )
+                                                    )
+                                                }
+                                                if (isSelected && isPasting) {
+                                                    stickerOffsetX += dragAmount.x
+                                                    stickerOffsetY += dragAmount.y
+                                                    if (change.positionChange() != Offset.Zero) change.consume()
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .drawWithContent {
+                                        drawContent()
+                                        println(height.toString() + "-----height")
+                                        println(width.toString() + "-----width")
+                                        offsetX = 16.dpToPx(context)
+                                        if (hasScaled != 0) {
+                                            if (hasScaled == 1) {
+                                                selectedImageBitmap?.let {
+                                                    selectedImageBitmap =
+                                                        resizeBitmapWithAspectRatio(
+                                                            selectedImageBitmap!!.asAndroidBitmap(),
+                                                            width,
+                                                            height,
+                                                            offsetX
+                                                        ).asImageBitmap()
+                                                }
+                                                imageWidth = selectedImageBitmap!!.width.toFloat()
+                                                imageHeight = selectedImageBitmap!!.height.toFloat()
+                                                if (imageWidth < width) {
+                                                    padding = ((width - imageWidth) / 2)
+                                                }
+
+                                                println(padding.toString() + "----padding")
+                                                println(imageWidth.toString() + "-----iwidth")
+                                                println(imageHeight.toString() + "-----iheight")
+                                            }
+                                            hasScaled--
+                                        }
+                                        tappedPoints.forEachIndexed { index, point ->
+                                            drawCircle(
+                                                color = Color.Red,
+                                                center = Offset(point.first, point.second),
+                                                radius = 5f,
+                                                style = Fill
+                                            )
+
+                                            if (index > 0) {
+                                                val previousPoint = tappedPoints[index - 1]
+                                                drawLine(
+                                                    color = Color.Red,
+                                                    start = Offset(
+                                                        previousPoint.first,
+                                                        previousPoint.second
+                                                    ),
+                                                    end = Offset(point.first, point.second),
+                                                    strokeWidth = 4f
+                                                )
+                                            }
+
+                                            if (index == tappedPoints.lastIndex && tappedPoints.size > 2) {
+                                                val firstPoint = tappedPoints.first()
+                                                val lastPoint = tappedPoints.last()
+                                                val distance = sqrt(
+                                                    (lastPoint.first - firstPoint.first).pow(2) + (lastPoint.second - firstPoint.second).pow(
+                                                        2
                                                     )
                                                 )
-                                            }
-                                            if (isSelected && isPasting) {
-                                                stickerOffsetX += dragAmount.x
-                                                stickerOffsetY += dragAmount.y
-                                                if (change.positionChange() != Offset.Zero) change.consume()
-                                            }
-                                        }
-                                    }
-                                }
-                                .drawWithContent {
-                                    drawContent()
-                                    println(height.toString()+"-----height")
-                                    println(width.toString()+"-----width")
-                                    offsetX = 16.dpToPx(context)
-                                    if (hasScaled!=0) {
-                                        if(hasScaled==1) {
-                                            selectedImageBitmap?.let {
-                                                selectedImageBitmap = resizeBitmapWithAspectRatio(
-                                                    selectedImageBitmap!!.asAndroidBitmap(),width,height, offsetX).asImageBitmap()
-                                            }
-                                            imageWidth = selectedImageBitmap!!.width.toFloat()
-                                            imageHeight = selectedImageBitmap!!.height.toFloat()
-                                            if(imageWidth < width) {
-                                                padding =  ((width - imageWidth) / 2)
+                                                if (distance <= thresholdDistance) {
+                                                    isSelected = true
+                                                    sticker = extractSticker(
+                                                        selectedImageBitmap!!.asAndroidBitmap(),
+                                                        tappedPoints,
+                                                        imageWidth,
+                                                        imageHeight
+                                                    ).asImageBitmap()
+                                                }
                                             }
 
-                                            println(padding.toString()+"----padding")
-                                            println(imageWidth.toString()+"-----iwidth")
-                                            println(imageHeight.toString()+"-----iheight")
                                         }
-                                        hasScaled--
-                                    }
-                                    tappedPoints.forEachIndexed { index, point ->
-                                        drawCircle(
-                                            color = Color.Red,
-                                            center = Offset(point.first, point.second),
-                                            radius = 5f,
-                                            style = Fill
-                                        )
-
-                                        if (index > 0) {
-                                            val previousPoint = tappedPoints[index - 1]
-                                            drawLine(
-                                                color = Color.Red,
-                                                start = Offset(
-                                                    previousPoint.first,
-                                                    previousPoint.second
-                                                ),
-                                                end = Offset(point.first, point.second),
-                                                strokeWidth = 4f
+                                        sticker?.let { it1 ->
+                                            drawImage(
+                                                image = it1,
+                                                topLeft = Offset(stickerOffsetX, stickerOffsetY)
                                             )
                                         }
+                                        if (!isPasting) {
+                                            selectedImageBitmap = pasteSticker(
+                                                originalImageBitmap!!.asAndroidBitmap(),
+                                                sticker!!.asAndroidBitmap(),
+                                                Offset(stickerOffsetX, stickerOffsetY),
+                                                originalWidth,
+                                                originalHeight
+                                            ).asImageBitmap()
+                                            sticker = null
+                                            tapPosition = Pair(0f, 0f)
+                                            tappedPoints.clear()
+                                            stickerOffsetX = 0f
+                                            stickerOffsetY = 0f
+                                            isPasting = true
+                                            isSelected = false
+                                            isPolygon = false
+                                            isFreehand = false
 
-                                        if (index == tappedPoints.lastIndex && tappedPoints.size > 2) {
-                                            val firstPoint = tappedPoints.first()
-                                            val lastPoint = tappedPoints.last()
-                                            val distance = sqrt(
-                                                (lastPoint.first - firstPoint.first).pow(2) + (lastPoint.second - firstPoint.second).pow(
-                                                    2
+                                            val returnedUri = selectedImageBitmap?.let {
+                                                com.example.myapplication.widget.bitmapToUri(
+                                                    context,
+                                                    it
                                                 )
-                                            )
-                                            if (distance <= thresholdDistance) {
-                                                isSelected = true
-                                                sticker = extractSticker(selectedImageBitmap!!.asAndroidBitmap(),tappedPoints,imageWidth,imageHeight).asImageBitmap()
                                             }
+                                            val resultIntent = Intent().apply {
+                                                putExtra("croppedImageUri", returnedUri)
+                                            }
+                                            setResult(Activity.RESULT_OK, resultIntent)
+                                            finish() // Finish the activity to return to the launcher
                                         }
-
+                                        if (isCancelled) {
+                                            sticker = null
+                                            tapPosition = Pair(0f, 0f)
+                                            tappedPoints.clear()
+                                            stickerOffsetX = 0f
+                                            stickerOffsetY = 0f
+                                            isPasting = true
+                                            isSelected = false
+                                            isPolygon = false
+                                            isFreehand = false
+                                            isCancelled = false
+                                        }
                                     }
-                                    sticker?.let { it1 ->
-                                        drawImage(
-                                            image = it1,
-                                            topLeft = Offset(stickerOffsetX, stickerOffsetY)
-                                        )
-                                    }
-                                    if (!isPasting) {
-                                        selectedImageBitmap = pasteSticker(originalImageBitmap!!.asAndroidBitmap(),sticker!!.asAndroidBitmap(),Offset(stickerOffsetX, stickerOffsetY),originalWidth,originalHeight).asImageBitmap()
-                                        sticker = null
-                                        tapPosition = Pair(0f, 0f)
-                                        tappedPoints.clear()
-                                        stickerOffsetX = 0f
-                                        stickerOffsetY = 0f
-                                        isPasting = true
-                                        isSelected = false
-                                        isPolygon = false
-                                        isFreehand = false
+                            )
+                        }
+                    }
+                    if (isPolygon || isFreehand) {
+                        Column(
+                            verticalArrangement = Arrangement.Bottom,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Spacer(modifier = Modifier.weight(0.2f))
+                            LazyRow(
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.Bottom,
+                                modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(
+                                    RoundedCornerShape(8.dp)
+                                )
+                            ) {
 
-                                        val returnedUri = selectedImageBitmap?.let {
-                                            com.example.myapplication.widget.bitmapToUri(
-                                                context,
-                                                it
+
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .background(appbarColor)
+                                            .clickable { isCancelled = true }
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.Bottom,
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.editcancel),
+                                                contentDescription = "Cancel",
+                                                modifier = Modifier
+                                                    .size(28.dp)
+
+                                            )
+                                            Text(
+                                                text = "Cancel",
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(5.dp)
                                             )
                                         }
-                                        val resultIntent = Intent().apply {
-                                            putExtra("croppedImageUri", returnedUri)
-                                        }
-                                        setResult(Activity.RESULT_OK, resultIntent)
-                                        finish() // Finish the activity to return to the launcher
-                                    }
-                                    if(isCancelled){
-                                        sticker = null
-                                        tapPosition = Pair(0f, 0f)
-                                        tappedPoints.clear()
-                                        stickerOffsetX = 0f
-                                        stickerOffsetY = 0f
-                                        isPasting = true
-                                        isSelected = false
-                                        isPolygon = false
-                                        isFreehand = false
-                                        isCancelled = false
                                     }
                                 }
-                        )
-                    }
-                }
-                if(isPolygon || isFreehand) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Spacer(modifier = Modifier.weight(0.2f))
-                        LazyRow(
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.Bottom,
-                            modifier = Modifier
-                                .padding(18.dp)
-                                .fillMaxWidth()
-                        ) {
 
-
-                            item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                                Box(
-                                    modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable { isCancelled = true }
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.cancel_button),
-                                            contentDescription = "Cancel",
+                                if (isSelected) {
+                                    item {
+                                        Box(
                                             modifier = Modifier
-                                                .size(28.dp)
+                                                .size(60.dp)
+                                                .background(appbarColor)
+                                                .clickable { isPasting = false }
+                                        ) {
+                                            Column(
+                                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                modifier = Modifier.fillMaxSize()
+                                            ) {
+                                                Image(
+                                                    painter = painterResource(id = R.drawable.editcheck),
+                                                    contentDescription = "Paste",
+                                                    modifier = Modifier
+                                                        .size(28.dp)
 
-                                        )
-                                        Text(
-                                            text = "Cancel",
-                                            color = Color.Black,
-                                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                        )
+                                                )
+                                                Text(
+                                                    text = "Paste",
+                                                    color = Color.White,
+                                                    fontSize = 10.sp,
+                                                    textAlign = TextAlign.Center,
+                                                    modifier = Modifier.padding(5.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
+                    if (!isPolygon && !isFreehand) {
+                        Column(
+                            verticalArrangement = Arrangement.Bottom,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Spacer(modifier = Modifier.weight(0.2f))
+                            LazyRow(
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.Bottom,
+                                modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp))
+                            ) {
 
-                            if(isSelected) {
+
                                 item {
-                                    Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                                     Box(
                                         modifier = Modifier
-                                            .size(70.dp)
-                                            .clip(CircleShape)
-                                            .background(Color.LightGray.copy(0.5f))
-                                            .padding(4.dp)
-                                            .clickable { isPasting = false }
+                                            .size(60.dp)
+                                            .background(appbarColor)
+                                            .clickable { isPolygon = true }
                                     ) {
                                         Column(
                                             verticalArrangement = Arrangement.Bottom, // Align text to the bottom
@@ -320,106 +386,51 @@ class SelectionModule : ComponentActivity() {
                                             modifier = Modifier.fillMaxSize()
                                         ) {
                                             Image(
-                                                painter = painterResource(id = R.drawable.baseline_check_24),
-                                                contentDescription = "Paste",
+                                                painter = painterResource(id = R.drawable.polygon_select),
+                                                contentDescription = "Polygon Selection",
                                                 modifier = Modifier
                                                     .size(28.dp)
 
                                             )
                                             Text(
-                                                text = "Paste",
-                                                color = Color.Black,
+                                                text = "Polygon",
+                                                color = Color.White,
                                                 fontSize = 10.sp,
                                                 textAlign = TextAlign.Center,
-                                                modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                                modifier = Modifier.padding(5.dp)
                                             )
                                         }
                                     }
                                 }
-                            }
-                        }
-                    }
-                }
-                if(!isPolygon && !isFreehand) {
-                    Column(
-                        verticalArrangement = Arrangement.Bottom,
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Spacer(modifier = Modifier.weight(0.2f))
-                        LazyRow(
-                            horizontalArrangement = Arrangement.SpaceAround,
-                            verticalAlignment = Alignment.Bottom,
-                            modifier = Modifier
-                                .padding(18.dp)
-                                .fillMaxWidth()
-                        ) {
 
 
-                            item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                                Box(
-                                    modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable { isPolygon = true }
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.fillMaxSize()
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .background(appbarColor)
+                                            .clickable { isFreehand = true }
                                     ) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.polygon_select),
-                                            contentDescription = "Polygon Selection",
-                                            modifier = Modifier
-                                                .size(28.dp)
+                                        Column(
+                                            verticalArrangement = Arrangement.Bottom,
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.freehand_select),
+                                                contentDescription = "Freehand Selection",
+                                                modifier = Modifier
+                                                    .size(28.dp)
 
-                                        )
-                                        Text(
-                                            text = "Polygon Selection",
-                                            color = Color.Black,
-                                            fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                        )
-                                    }
-                                }
-                            }
-
-
-                            item {
-                                Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
-                                Box(
-                                    modifier = Modifier
-                                        .size(70.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.LightGray.copy(0.5f))
-                                        .padding(4.dp)
-                                        .clickable { isFreehand = true }
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.freehand_select),
-                                            contentDescription = "Freehand Selection",
-                                            modifier = Modifier
-                                                .size(28.dp)
-
-                                        )
-                                        Text(
-                                            text = "Freehand Selection",
-                                            color = Color.Black,
-                                            fontSize = 10.sp,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(5.dp) // Add padding at the bottom
-                                        )
+                                            )
+                                            Text(
+                                                text = "Freehand",
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(5.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }

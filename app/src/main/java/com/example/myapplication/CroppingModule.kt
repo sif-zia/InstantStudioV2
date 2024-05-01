@@ -25,11 +25,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
-import androidx.compose.material.contentColorFor
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.myapplication.widget.CommonAppBar
-import com.example.myapplication.widget.CropSelectionWidgets.AppBar
 import com.example.myapplication.widget.CropSelectionWidgets.CropFAB
 import com.example.myapplication.widget.CropSelectionWidgets.CropifyOptionSelector
 import com.example.myapplication.widget.bitmapToUri
@@ -70,8 +69,99 @@ class CroppingModule : ComponentActivity() {
             var cropifyOption by remember { mutableStateOf(CropifyOption()) }
             var croppedImage by remember { mutableStateOf<ImageBitmap?>(null) }
             var isPreview by remember { mutableStateOf(false) }
-
+            var isSetting by remember { mutableStateOf(false) }
+            var hasSet by remember { mutableStateOf(false) }
+            val context = LocalContext.current
             val scaffoldState = rememberBottomSheetScaffoldState()
+            if(!hasSet) {
+                cropifyOption = cropifyOption.copy(backgroundColor = Color.Transparent)
+                cropifyOption = cropifyOption.copy(maskColor = Color.Transparent)
+                hasSet = true
+            }
+            val gradientcolors = listOf(
+                Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
+            )
+            var bgColor = Color(12,32,63)
+            var appbarColor = Color(25,56,106)
+
+            if(isSetting){
+                Dialog(
+                    onDismissRequest = {isSetting = false},
+                    properties = DialogProperties(usePlatformDefaultWidth = false)
+                ) {
+                    Column(
+                        modifier = Modifier.background(bgColor.copy(alpha = 0.4f))
+                    ) {
+                        CommonAppBar(title = "Crop Image Preview", modifier = Modifier.background(color = Color.DarkGray))
+                        Spacer(modifier = Modifier.fillMaxHeight(0.1f))
+                        Column {
+                            Box(
+                                modifier = Modifier.fillMaxHeight(0.8f)
+                            ) {
+                                CropifyOptionSelector(
+                                    option = cropifyOption,
+                                    onOptionChanged = { cropifyOption = it },
+                                    modifier = Modifier
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(16.dp)
+                                        .statusBarsPadding()
+                                        .navigationBarsPadding()
+                                )
+                            }
+                        }
+                        Column(
+                            verticalArrangement = Arrangement.Bottom,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Spacer(modifier = Modifier.weight(0.2f))
+                            LazyRow(
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                verticalAlignment = Alignment.Bottom,
+                                modifier = Modifier
+                                    .padding(18.dp)
+                                    .padding(bottom = 10.dp)
+                                    .clip(
+                                        RoundedCornerShape(8.dp)
+                                    )
+                            ) {
+
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .background(appbarColor)
+                                            .clickable { isSetting = false }
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.editcheck),
+                                                contentDescription = "Done",
+                                                modifier = Modifier
+                                                    .size(28.dp)
+
+                                            )
+                                            Text(
+                                                text = "Done",
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(5.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
 
             croppedImage?.let {
                 isPreview = true
@@ -85,57 +175,140 @@ class CroppingModule : ComponentActivity() {
                     finish() // Finish the activity to return to the launcher
                 }
             }
-            BottomSheetScaffold(
-                topBar = {
-                    AppBar(
-                        title = "Crop Image",
-                        bottomSheetState = scaffoldState.bottomSheetState,
-                    )
-                },
-                content = { it ->
-                    val context = LocalContext.current
-                    if (imageUri != null) {
-                        Cropify(
-                            uri = imageUri,
-                            state = cropifyState,
-                            option = cropifyOption,
-                            onImageCropped = { croppedImage = it },
-                            onFailedToLoadImage = {
-                                Toast.makeText(
-                                    context,
-                                    "Failed to load image",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(it)
-                        )
-                    }
-                },
-                sheetContent = {
-                    CropifyOptionSelector(
-                        option = cropifyOption,
-                        onOptionChanged = { cropifyOption = it },
+            Column(modifier = Modifier
+                .background(bgColor)
+                .fillMaxSize()){
+                CommonAppBar(title = "Crop Image")
+                Spacer(modifier = Modifier.fillMaxHeight(0.1f))
+                Column(modifier = Modifier.background(brush = Brush.verticalGradient(gradientcolors))) {
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .verticalScroll(rememberScrollState())
-                            .padding(16.dp)
-                            .statusBarsPadding()
-                            .navigationBarsPadding()
-                    )
-                },
-                floatingActionButton = {
-                    CropFAB(modifier = Modifier.navigationBarsPadding(), isPreview) { cropifyState.crop() }
-                },
-                sheetPeekHeight = 0.dp,
-                scaffoldState = scaffoldState,
-                sheetBackgroundColor = Color.DarkGray,
-                sheetContentColor = contentColorFor(androidx.compose.material.MaterialTheme.colors.surface),
-                backgroundColor = androidx.compose.material.MaterialTheme.colors.background,
-                contentColor = contentColorFor(backgroundColor = androidx.compose.material.MaterialTheme.colors.background),
-                modifier = Modifier
-                    .fillMaxSize()
-            )
+                            .fillMaxHeight(0.8f)
+                    ){
+                        if (imageUri != null) {
+                            Cropify(
+                                uri = imageUri,
+                                state = cropifyState,
+                                option = cropifyOption,
+                                onImageCropped = { croppedImage = it },
+                                onFailedToLoadImage = {Toast.makeText(context,"Failed to load image",Toast.LENGTH_SHORT).show()},
+                                modifier = Modifier
+                                    .fillMaxSize()
+                            )
+                        }
+                    }
+                    Column(
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Spacer(modifier = Modifier.weight(0.2f))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.Bottom,
+                            modifier = Modifier
+                                .padding(18.dp)
+                                .padding(bottom = 10.dp)
+                                .clip(
+                                    RoundedCornerShape(8.dp)
+                                )
+                        ) {
+
+                            if(!isSetting) {
+                                item {
+                                    CropFAB(
+                                        modifier = Modifier.navigationBarsPadding(),
+                                        isPreview
+                                    ) { cropifyState.crop() }
+                                }
+
+
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .background(appbarColor)
+                                            .clickable { isSetting = true }
+                                    ) {
+                                        Column(
+                                            verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.outline_settings_24),
+                                                contentDescription = "Crop Settings",
+                                                modifier = Modifier
+                                                    .size(28.dp)
+
+                                            )
+                                            Text(
+                                                text = "Crop Settings",
+                                                color = Color.White,
+                                                fontSize = 10.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.padding(5.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+//            BottomSheetScaffold(
+//                topBar = {
+//                    AppBar(
+//                        title = "Crop Image",
+//                        bottomSheetState = scaffoldState.bottomSheetState,
+//                    )
+//                },
+//                content = { it ->
+//                    val context = LocalContext.current
+//                    if (imageUri != null) {
+//                        Cropify(
+//                            uri = imageUri,
+//                            state = cropifyState,
+//                            option = cropifyOption,
+//                            onImageCropped = { croppedImage = it },
+//                            onFailedToLoadImage = {
+//                                Toast.makeText(
+//                                    context,
+//                                    "Failed to load image",
+//                                    Toast.LENGTH_SHORT
+//                                ).show()
+//                            },
+//                            modifier = Modifier
+//                                .fillMaxSize()
+//                                .padding(it)
+//                        )
+//                    }
+//                },
+//                sheetContent = {
+//                    CropifyOptionSelector(
+//                        option = cropifyOption,
+//                        onOptionChanged = { cropifyOption = it },
+//                        modifier = Modifier
+//                            .verticalScroll(rememberScrollState())
+//                            .padding(16.dp)
+//                            .statusBarsPadding()
+//                            .navigationBarsPadding()
+//                    )
+//                },
+//                floatingActionButton = {
+//                    CropFAB(modifier = Modifier.navigationBarsPadding(), isPreview) { cropifyState.crop() }
+//                },
+//                sheetPeekHeight = 0.dp,
+//                scaffoldState = scaffoldState,
+//                sheetBackgroundColor = Color.DarkGray,
+//                sheetContentColor = contentColorFor(androidx.compose.material.MaterialTheme.colors.surface),
+//                backgroundColor = androidx.compose.material.MaterialTheme.colors.background,
+//                contentColor = contentColorFor(backgroundColor = androidx.compose.material.MaterialTheme.colors.background),
+//                modifier = Modifier
+//                    .fillMaxSize()
+//            )
         }
     }
     @Composable
@@ -150,7 +323,7 @@ class CroppingModule : ComponentActivity() {
         ) {
             val context = LocalContext.current
             Column(
-                modifier = Modifier.background(Color.Black.copy(alpha = 0.5f))
+                modifier = Modifier.background(bgColor.copy(alpha = 0.4f))
             ) {
                 CommonAppBar(title = "Crop Image Preview", modifier = Modifier.background(color = Color.DarkGray))
                 Spacer(modifier = Modifier.fillMaxHeight(0.1f))
@@ -170,38 +343,33 @@ class CroppingModule : ComponentActivity() {
                 }
                 Column(
                     verticalArrangement = Arrangement.Bottom,
-                    horizontalAlignment = Alignment.Start,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     Spacer(modifier = Modifier.weight(0.2f))
                     LazyRow(
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.Bottom,
-                        modifier = Modifier
-                            .padding(18.dp)
-                            .fillMaxWidth()
+                        modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(
+                            RoundedCornerShape(8.dp)
+                        )
                     ) {
 
 
                         item {
-                            Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                             Box(
                                 modifier = Modifier
-                                    .size(70.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.LightGray.copy(0.5f))
-                                    .padding(4.dp)
-                                    .clickable {
-                                        onDismissRequest()
-                                    }
+                                    .size(60.dp)
+                                    .background(appbarColor)
+                                    .clickable { onDismissRequest() }
                             ) {
                                 Column(
-                                    verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                    verticalArrangement = Arrangement.Bottom,
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier.fillMaxSize()
                                 ) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.cancel_button),
+                                        painter = painterResource(id = R.drawable.editcancel),
                                         contentDescription = "Cancel",
                                         modifier = Modifier
                                             .size(28.dp)
@@ -209,25 +377,20 @@ class CroppingModule : ComponentActivity() {
                                     )
                                     Text(
                                         text = "Cancel",
-                                        color = Color.Black,
+                                        color = Color.White,
                                         fontSize = 10.sp,
-//                            fontWeight = FontWeight.Bold,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        modifier = Modifier.padding(5.dp)
                                     )
                                 }
                             }
                         }
 
-
                         item {
-                            Spacer(modifier = Modifier.width(12.dp)) // Add space between buttons
                             Box(
                                 modifier = Modifier
-                                    .size(70.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.LightGray.copy(0.5f))
-                                    .padding(4.dp)
+                                    .size(60.dp)
+                                    .background(appbarColor)
                                     .clickable {
                                         val uri = bitmapToUri(context, bitmap)
                                         onReturnImage(uri)
@@ -239,18 +402,18 @@ class CroppingModule : ComponentActivity() {
                                     modifier = Modifier.fillMaxSize()
                                 ) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.baseline_check_24),
-                                        contentDescription = "Done",
+                                        painter = painterResource(id = R.drawable.editcheck),
+                                        contentDescription = "Paste",
                                         modifier = Modifier
                                             .size(28.dp)
 
                                     )
                                     Text(
-                                        text = "Done",
-                                        color = Color.Black,
+                                        text = "Paste",
+                                        color = Color.White,
                                         fontSize = 10.sp,
                                         textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(5.dp) // Add padding at the bottom
+                                        modifier = Modifier.padding(5.dp)
                                     )
                                 }
                             }

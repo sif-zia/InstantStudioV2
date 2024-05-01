@@ -37,7 +37,7 @@ private fun ColorCard(color: Color, isSelected: Boolean, modifier: Modifier = Mo
     Card(
       onClick = onClick,
       shape = RoundedCornerShape(8.dp),
-      border = if (it) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+      border = if (it) BorderStroke(2.dp, Color(25,56,106)) else null,
       modifier = modifier
     ) {
       Spacer(
