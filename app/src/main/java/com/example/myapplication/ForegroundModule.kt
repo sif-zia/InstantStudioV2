@@ -12,9 +12,16 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
@@ -54,6 +62,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -62,6 +71,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.myapplication.widget.CommonAppBar
 import com.example.myapplication.widget.FGandBGWidgets.ColorPicker
+import com.example.myapplication.widget.FGandBGWidgets.RegionSelctor
 import com.example.myapplication.widget.FGandBGWidgets.buildFormBody
 import com.example.myapplication.widget.FGandBGWidgets.buildRequest
 import com.example.myapplication.widget.FGandBGWidgets.compressImageToByteArray
@@ -75,11 +85,40 @@ import java.io.IOException
 
 
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.material.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.unit.dp
+
+
 class ForegroundModule : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         var imageUri: Uri? = intent?.getParcelableExtra("imageUri")
         var tempImageUri:Uri? = intent?.getParcelableExtra("imageUri")
+        var tempImageUriRegion:Uri? = intent?.getParcelableExtra("imageUri")
         setContent {
             var applyButtonChecker by remember {  mutableStateOf(false) }
             val painter = painterResource(id = R.drawable.b1)
@@ -88,10 +127,16 @@ class ForegroundModule : ComponentActivity() {
             val context = LocalContext.current
             val bgc = painterResource(R.drawable.baseline_account_box_24)
             val adv = painterResource(R.drawable.baseline_color_lens_24)
+            val pen = painterResource(R.drawable.color_dropper)
             var isBoxVisible by remember { mutableStateOf(true) }
             var isBoxVisible2 by remember { mutableStateOf(true) }
             var isBoxVisible3 by remember { mutableStateOf(true) }
             var isBoxVisible4 by remember { mutableStateOf(true) }
+            var isBoxVisible5 by remember { mutableStateOf(true) }
+            var isBoxVisible6 by remember { mutableStateOf(true) }
+            var isBoxVisible7 by remember { mutableStateOf(true) }
+            var isBoxVisible8 by remember { mutableStateOf(true) }
+            var isBoxVisible9 by remember { mutableStateOf(true) }
 
             val gradientcolors = listOf(
                 Color.Transparent,  Color.Transparent, Color.Black.copy(alpha = 0.3f)
@@ -104,15 +149,17 @@ class ForegroundModule : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(bgColor)
-
             )
 
             var decodedImage: Bitmap? = null
-
             var isColorPickerVisible by remember { mutableStateOf(false) }
             var isConfirmationVisible by remember { mutableStateOf(false) }
+            var isRegionSelectorVisible by remember { mutableStateOf(false) }
             var selectedColor by remember { mutableStateOf(Color.Transparent) }
             var hexCode by remember { mutableStateOf("") }
+            var hexCodeRegion by remember { mutableStateOf("") }
+            var temphexVal by remember { mutableStateOf("#FFFFFF") }
+            var temphexVal2 by remember { mutableStateOf("#FFFFFF") }
             var applyChanges by remember { mutableStateOf(false) }
             if(loading.value){
                 Dialog(
@@ -135,12 +182,11 @@ class ForegroundModule : ComponentActivity() {
                 }
             }
 
-
-
-
             CommonAppBar(title = "Foreground Color", modifier = Modifier.background(color = Color.DarkGray))
 
-            Box(modifier = Modifier.fillMaxSize().background(brush = Brush.verticalGradient(gradientcolors))) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(brush = Brush.verticalGradient(gradientcolors))) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -152,8 +198,8 @@ class ForegroundModule : ComponentActivity() {
                         AsyncImage(
                             model = uri,
                             contentDescription = null,
-                                    modifier = Modifier
-                                    .padding(top = 84.dp)
+                            modifier = Modifier
+                                .padding(top = 84.dp)
                                 .fillMaxWidth()
                                 .fillMaxHeight(0.8f)
                         )
@@ -164,11 +210,13 @@ class ForegroundModule : ComponentActivity() {
                         selectedColor = color
                         hexCode = hex
                         isColorPickerVisible = false
+                        temphexVal ="#"+ hex.substring(2)
                     }
                 }
                 else{
                     isBoxVisible=true
                     isBoxVisible2=true
+                    isBoxVisible7=true
                 }
 
                 if (isConfirmationVisible) {
@@ -182,7 +230,26 @@ class ForegroundModule : ComponentActivity() {
                 else{
                     isBoxVisible3=true
                     isBoxVisible4=true
+                    isBoxVisible8=true
                 }
+
+                if (isRegionSelectorVisible) {
+                    tempImageUriRegion?.let {
+                        RegionSelctor (imageUri= it){ hexCodeRegionSelected ->
+                            hexCodeRegion=hexCodeRegionSelected
+                            temphexVal2 = hexCodeRegion
+                            hexCodeRegion ="FF" + hexCodeRegion.substring(1).replace("#", "")
+                            System.out.println("USER CONFIRMED SELECTED REGION HEXCODE: " + hexCodeRegion)
+                            isRegionSelectorVisible=false
+                        }
+                    }
+                }
+                else{
+                    isBoxVisible5=true
+                    isBoxVisible6=true
+                    isBoxVisible9=true
+                }
+
             }
 
             Column(
@@ -192,152 +259,271 @@ class ForegroundModule : ComponentActivity() {
                 val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                 val halfScreenWidth = (screenWidth / 2)
                 System.out.println("HALFSCREENWIDTH= "+halfScreenWidth)
-                Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
-                LazyRow(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp))
+                Spacer(modifier = Modifier
+                    .weight(0.2f)
+                    .width(halfScreenWidth * 4))
+
+                var visible by remember { mutableStateOf(true) }
+                AnimatedVisibility(
+                    visible,
+                    enter = slideIn(tween(10000, easing = LinearOutSlowInEasing)) { fullSize ->
+
+                        IntOffset(fullSize.width / 4, 100)
+                    },
+                    exit = slideOut(tween(100, easing = FastOutSlowInEasing)) {
+                        // The offset can be entirely independent of the size of the content. This specifies
+                        // a target offset 180 pixels to the left of the content, and 50 pixels below. This will
+                        // produce a slide-left combined with a slide-down.
+                        IntOffset(-180, 50)
+                    },
                 ) {
 
-                    item {
-                        if (isBoxVisible2 && isBoxVisible4) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .width(100.dp)
-                                .background(appbarColor)
-                                .clickable
-                                {
-                                    if (hexCode.length == 8) {
-                                        isBoxVisible2 = false
-                                        isBoxVisible = false
+                    LazyRow(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.Bottom,
+                        modifier = Modifier
+                            .padding(18.dp)
+                            .padding(bottom = 10.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
 
-                                        val byteArray = compressImageToByteArray(context)
-                                        var rgbArray = convertHexToRGB(hexCode)
-                                        var encoded =
-                                            Base64.encodeToString(byteArray, Base64.DEFAULT)
-                                        val client = byteArray?.let { returnClientBuilder(it) }
-                                        val formBody = buildFormBody(encoded, rgbArray, "False")
-                                        val request = buildRequest(formBody)
-                                        System.out.println(" " + formBody + "\n" + request + "\nABOUT TO CALL")
-                                        if (client != null) {
-                                            client
-                                                .newCall(request)
-                                                .enqueue(object : Callback {
-                                                    override fun onFailure(
-                                                        call: Call,
-                                                        e: IOException
-                                                    ) {
-                                                        e.printStackTrace()
-                                                    }
 
-                                                    override fun onResponse(
-                                                        call: Call,
-                                                        response: Response
-                                                    ) {
-                                                        if (response.isSuccessful) {
-                                                            System.out.println("SUCCESFULLL!!!!!!!!!!")
-                                                            var receivedResponse =
-                                                                response.body?.string() ?: ""
-                                                            Log.d(
-                                                                "Received Response",
-                                                                "receivedResponse: $receivedResponse"
-                                                            )
-                                                            decodedImage =   decodeBase64Image(   receivedResponse  )
-                                                            val handler =
-                                                                Handler(Looper.getMainLooper())
-                                                            handler.post {
-                                                                decodedImage?.let {
-                                                                    tempImageUri =
-                                                                        getImageUri(context, it)
-                                                                } ?: run {
-                                                                    Log.e(
-                                                                        "Bitmap Error",
-                                                                        "Failed to decode the image."
-                                                                    )
-                                                                }
-                                                                loading.value = false
-                                                                isBoxVisible3 = false
-                                                                isBoxVisible4 = false
-                                                                isConfirmationVisible = true
+                        item {
+                            if (isBoxVisible2 && isBoxVisible4 && isBoxVisible6) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .width(100.dp)
+                                        .background(appbarColor)
+                                        .clickable
+                                        {
+                                            if (hexCode.length == 8 && hexCodeRegion.length == 8) {
+                                                isBoxVisible2 = false
+                                                isBoxVisible = false
+                                                val byteArray = compressImageToByteArray(context)
+                                                var rgbArray = convertHexToRGB(hexCode)
+                                                var rgbArray_to_change =
+                                                    convertHexToRGB(hexCodeRegion)
+                                                var encoded =
+                                                    Base64.encodeToString(byteArray, Base64.DEFAULT)
+                                                val client =
+                                                    byteArray?.let { returnClientBuilder(it) }
+                                                val formBody = buildFormBody(
+                                                    encoded,
+                                                    rgbArray,
+                                                    "False",
+                                                    rgbArray_to_change
+                                                )
+                                                val request = buildRequest(formBody)
+                                                System.out.println(" " + formBody + "\n" + request + "\nABOUT TO CALL")
+                                                if (client != null) {
+                                                    client
+                                                        .newCall(request)
+                                                        .enqueue(object : Callback {
+                                                            override fun onFailure(
+                                                                call: Call,
+                                                                e: IOException
+                                                            ) {
+                                                                e.printStackTrace()
                                                             }
-                                                        }
-                                                        System.out.println("WAS IT SUCCESFULLL????????")
-                                                    }
-                                                })
-                                            loading.value = true
+
+                                                            override fun onResponse(
+                                                                call: Call,
+                                                                response: Response
+                                                            ) {
+                                                                if (response.isSuccessful) {
+                                                                    System.out.println("SUCCESFULLL!!!!!!!!!!")
+                                                                    var receivedResponse =
+                                                                        response.body?.string()
+                                                                            ?: ""
+                                                                    Log.d(
+                                                                        "Received Response",
+                                                                        "receivedResponse: $receivedResponse"
+                                                                    )
+                                                                    decodedImage =
+                                                                        decodeBase64Image(
+                                                                            receivedResponse
+                                                                        )
+
+                                                                    val handler =
+                                                                        Handler(Looper.getMainLooper())
+                                                                    handler.post {
+                                                                        decodedImage?.let {
+                                                                            tempImageUri =
+                                                                                getImageUri(
+                                                                                    context,
+                                                                                    it
+                                                                                )
+
+
+                                                                        } ?: run {
+                                                                            Log.e(
+                                                                                "Bitmap Error",
+                                                                                "Failed to decode the image."
+                                                                            )
+                                                                        }
+                                                                        loading.value = false
+                                                                        isBoxVisible3 = false
+                                                                        isBoxVisible4 = false
+                                                                        isBoxVisible5 = false
+                                                                        isBoxVisible6 = false
+                                                                        isBoxVisible7 = false
+                                                                        isBoxVisible8 = false
+                                                                        isBoxVisible9 = false
+                                                                        isConfirmationVisible = true
+                                                                    }
+                                                                }
+                                                                System.out.println("WAS IT SUCCESFULLL????????")
+                                                            }
+                                                        })
+                                                    loading.value = true
+                                                }
+                                            } else {
+                                                var str_msg = ""
+                                                if (hexCode.length != 8 && hexCodeRegion.length != 8) {
+                                                    str_msg = "Select Color & Region First!"
+                                                } else if (hexCode.length != 8) {
+                                                    str_msg = "Select Color Also!"
+                                                } else if (hexCodeRegion.length != 8) {
+                                                    str_msg = "Select Region Also!"
+                                                }
+
+                                                Toast
+                                                    .makeText(
+                                                        context,
+                                                        str_msg,
+                                                        Toast.LENGTH_LONG
+                                                    )
+                                                    .show()
+                                            }
                                         }
-                                    } else {
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                "Select Color First!",
-                                                Toast.LENGTH_LONG
-                                            )
-                                            .show()
+
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = bgc,
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Apply Color",
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(5.dp)
+                                        )
                                     }
                                 }
-
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Image(
-                                    painter = bgc,
-                                    contentDescription = "Your Icon Description",
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                )
-                                Text(
-                                    text = "Apply Color",
-                                    color = Color.White,
-                                    fontSize = 10.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(5.dp)
-                                )
                             }
                         }
-                     }
-                    }
 
-                    item {
-                        // ADD SPACER HERE
-                        if (isBoxVisible && isBoxVisible3) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .width(100.dp)
-                                .background(appbarColor)
-                                .clickable  {
-                                    isBoxVisible2 = false
-                                    isBoxVisible = false
-                                    isColorPickerVisible = true
+                        item {
+                            // ADD SPACER HERE
+                            if (isBoxVisible && isBoxVisible3 && isBoxVisible5) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .width(100.dp)
+                                        .background(appbarColor)
+                                        .clickable {
+                                            isBoxVisible2 = false
+                                            isBoxVisible = false
+                                            isBoxVisible5 = false
+                                            isBoxVisible6 = false
+                                            isBoxVisible7 = false
+                                            isBoxVisible8 = false
+                                            isBoxVisible9 = false
+                                            isColorPickerVisible = true
+                                        }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = adv,
+                                            colorFilter = ColorFilter.tint(
+                                                Color(
+                                                    android.graphics.Color.parseColor(
+                                                        temphexVal
+                                                    )
+                                                )
+                                            ),
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Color Picker",
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                    }
                                 }
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Bottom, // Align text to the bottom
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Image(
-                                    painter = adv,
-                                    contentDescription = "Your Icon Description",
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                )
-                                Text(
-                                    text = "Color Picker",
-                                    color = Color.White,
-                                    fontSize = 10.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(5.dp)
-                                )
                             }
                         }
+
+                        item {
+                            // ADD SPACER HERE
+                            if (isBoxVisible7 && isBoxVisible8 && isBoxVisible9) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .width(100.dp)
+                                        .background(appbarColor)
+                                        .clickable {
+                                            isBoxVisible = false
+                                            isBoxVisible2 = false
+                                            isBoxVisible3 = false
+                                            isBoxVisible4 = false
+                                            isBoxVisible5 = false
+                                            isBoxVisible6 = false
+                                            isBoxVisible7 = false
+                                            isBoxVisible8 = false
+                                            isBoxVisible9 = false
+                                            isRegionSelectorVisible = true
+                                        }
+                                ) {
+                                    Column(
+                                        verticalArrangement = Arrangement.Bottom, // Align text to the bottom
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Image(
+                                            painter = pen,
+                                            colorFilter = ColorFilter.tint(
+                                                Color(
+                                                    android.graphics.Color.parseColor(
+                                                        temphexVal2
+                                                    )
+                                                )
+                                            ),
+                                            contentDescription = "Your Icon Description",
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                        )
+                                        Text(
+                                            text = "Select Region",
+                                            color = Color.White,
+                                            fontSize = 10.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
                     }
-                 }
+
                 }
             }
 
@@ -434,11 +620,16 @@ class ForegroundModule : ComponentActivity() {
                 val screenWidth = LocalConfiguration.current.screenWidthDp.dp
                 val halfScreenWidth = (screenWidth / 2)
                 System.out.println("HALFSCREENWIDTH= "+halfScreenWidth)
-                Spacer(modifier = Modifier.weight(0.2f).width(halfScreenWidth*4))
+                Spacer(modifier = Modifier
+                    .weight(0.2f)
+                    .width(halfScreenWidth * 4))
                 LazyRow(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.padding(18.dp).padding(bottom = 10.dp).clip(RoundedCornerShape(8.dp))
+                    modifier = Modifier
+                        .padding(18.dp)
+                        .padding(bottom = 10.dp)
+                        .clip(RoundedCornerShape(8.dp))
                 ) {
 
                     item {
@@ -447,7 +638,7 @@ class ForegroundModule : ComponentActivity() {
                             modifier = Modifier
                                 .size(60.dp)
                                 .background(appbarColor)
-                                .clickable  {
+                                .clickable {
                                     onConfirmation(false)
                                 }
 
@@ -482,7 +673,7 @@ class ForegroundModule : ComponentActivity() {
                             modifier = Modifier
                                 .size(60.dp)
                                 .background(appbarColor)
-                                .clickable  {
+                                .clickable {
                                     val resultIntent = Intent().apply {
                                         putExtra("fgImageUri", imageUri)
                                     }
@@ -525,13 +716,6 @@ class ForegroundModule : ComponentActivity() {
 
             }   }
     }
-
-
-
-
-
-
-
 
 
 }

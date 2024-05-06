@@ -1,12 +1,11 @@
-package com.example.myapplication.widget.FGandBGWidgets
-
+package com.example.myapplication.widget.BGWidgets
 
 fun convertHexToRGB(hexCode: String): String {
     System.out.println("Color RECEIVED: "+hexCode+ " and its length: "+ hexCode.length)
 
     var hexSubstring = ""
     if(hexCode.length!=8){
-        hexSubstring="00000000"
+       return "f"
     }
     else{
         hexSubstring=hexCode

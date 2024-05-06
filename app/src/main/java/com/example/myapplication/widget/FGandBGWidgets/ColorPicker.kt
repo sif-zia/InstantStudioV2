@@ -91,6 +91,8 @@ fun ColorPicker(onColorSelected: (Color, String) -> Unit) {
                     val hex: String = colorEnvelope.hexCode
                     selectedColor = mutableStateOf(color)
                     hexCode = hex
+                    System.out.println("Inside Color Picker:: "+ convertHexToRGB(hex))
+
                 }
             )
 
@@ -115,7 +117,9 @@ fun ColorPicker(onColorSelected: (Color, String) -> Unit) {
             val screenWidth = LocalConfiguration.current.screenWidthDp.dp
             val halfScreenWidth = (screenWidth / 2)
             var appbarColor = Color(25,56,106)
+
             Spacer(modifier=Modifier.padding(15.dp))
+
             Box(
                 modifier = Modifier
                     .size(80.dp, 45.dp)
