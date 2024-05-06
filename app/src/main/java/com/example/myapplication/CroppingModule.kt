@@ -90,7 +90,7 @@ class CroppingModule : ComponentActivity() {
                     properties = DialogProperties(usePlatformDefaultWidth = false)
                 ) {
                     Column(
-                        modifier = Modifier.background(bgColor.copy(alpha = 0.4f))
+                        modifier = Modifier.background(bgColor.copy(alpha = 0.73f))
                     ) {
                         CommonAppBar(title = "Crop Image Preview", modifier = Modifier.background(color = Color.DarkGray))
                         Spacer(modifier = Modifier.fillMaxHeight(0.1f))
