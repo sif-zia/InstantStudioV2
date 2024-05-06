@@ -88,6 +88,7 @@ class FilterModule : ComponentActivity() {
             val context = LocalContext.current
             val filterStack = remember { mutableListOf<Int?>() }
             var currentFilter by remember { mutableStateOf<Int?>(null) }
+            var tempFilter by remember { mutableStateOf<Int?>(null) }
             val bitmapState = remember { mutableStateOf<Bitmap?>(null) }
             val lightImage = remember { mutableStateOf(false) }
             val DarkImage = remember { mutableStateOf(false) }
@@ -139,6 +140,14 @@ class FilterModule : ComponentActivity() {
                                             .background(bgColor)
                                             .clickable {
                                                 currentFilter = index + 1
+                                                if (filterStack.isNotEmpty()) {
+                                                    tempFilter = filterStack.removeLast()
+                                                    if(tempFilter!=currentFilter){
+                                                        filterStack.add(tempFilter)
+                                                    }
+                                                } else {
+                                                    tempFilter = null
+                                                }
                                                 filterStack.add(currentFilter)
                                                 allowDoubleUndo = true
                                                 showDialog = false
@@ -306,16 +315,42 @@ class FilterModule : ComponentActivity() {
                                     if (resultedPixels > 1.05) {
                                         lightImage.value = true
                                         currentFilter = 5
+                                        if (filterStack.isNotEmpty()) {
+                                            tempFilter = filterStack.removeLast()
+                                            if(tempFilter!=currentFilter){
+                                                filterStack.add(tempFilter)
+                                            }
+                                        } else {
+                                            tempFilter = null
+                                        }
                                         filterStack.add(5)
                                     } else if (resultedPixels < 0.4) {
                                         DarkImage.value = true
                                         currentFilter = 2
+
+                                        if (filterStack.isNotEmpty()) {
+                                            tempFilter = filterStack.removeLast()
+                                            if(tempFilter!=currentFilter){
+                                                filterStack.add(tempFilter)
+                                            }
+                                        } else {
+                                            tempFilter = null
+                                        }
                                         filterStack.add(2)
                                     } else {
                                         MediumImage.value = true
                                         currentFilter = 11
+                                        if (filterStack.isNotEmpty()) {
+                                            tempFilter = filterStack.removeLast()
+                                            if(tempFilter!=currentFilter){
+                                                filterStack.add(tempFilter)
+                                            }
+                                        } else {
+                                            tempFilter = null
+                                        }
                                         filterStack.add(11)
                                     }
+                                    allowDoubleUndo=true
                                 }
                         ) {
                             Column(
@@ -435,7 +470,6 @@ class FilterModule : ComponentActivity() {
                                     contentDescription = "Your Icon Description",
                                     modifier = Modifier
                                         .size(23.dp)
-
                                 )
                                 Text(
                                     text = "Done",
@@ -759,5 +793,4 @@ fun undoFilter(filterStack: MutableList<Int?>) :Int?{
         currentFilter = null
     }
     return currentFilter
-
 }
