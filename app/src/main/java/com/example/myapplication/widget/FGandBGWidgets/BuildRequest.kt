@@ -6,7 +6,7 @@ import okhttp3.Request
 
 
 var selectedColors=null
-val httpLink="https://c0e5-2400-adc5-458-8a00-893a-3dc2-7fa4-4861.ngrok-free.app"
+val httpLink="https://183a-2400-adc5-458-8a00-8918-3c29-6c5f-9880.ngrok-free.app"
 val url=httpLink+"/req"
 
 fun buildRequest(formBody: FormBody): Request {
