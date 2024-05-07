@@ -90,9 +90,6 @@ class AdvanceEditingPenTool : ComponentActivity() {
 
             bitmap?.let { sourceBitmap ->
                 MyApplicationTheme {
-                    var redoVisitbility by remember { mutableStateOf(false) }
-                    var colorBarVisitbility by remember { mutableStateOf(false) }
-                    var sizeBarVisitbility by remember { mutableStateOf(false) }
                     var penColor by remember { mutableStateOf(Color.Red) }
                     var penSize by remember { mutableStateOf(1f) }
                     var drawPath: DrawBoxPayLoad? by remember { mutableStateOf(null) }
@@ -189,9 +186,6 @@ class AdvanceEditingPenTool : ComponentActivity() {
 
                                     }) { undoCount, redoCount ->
 
-                                    sizeBarVisitbility = false
-                                    colorBarVisitbility = false
-                                    redoVisitbility = redoCount != 0
                                     drawPath = controller.exportPath()
                                 }
 
@@ -256,15 +250,8 @@ class AdvanceEditingPenTool : ComponentActivity() {
 
                                     }) { undoCount, redoCount ->
 
-                                    sizeBarVisitbility = false
-                                    colorBarVisitbility = false
-                                    redoVisitbility = redoCount != 0
                                     drawPath = controller.exportPath()
                                 }
-
-                                sourceImgBitmap =
-                                    modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)
-
                             }
                         }
                         Row(modifier = Modifier.height(184.dp)) {
@@ -278,10 +265,6 @@ class AdvanceEditingPenTool : ComponentActivity() {
                                 Slider(
                                     value = penSize, onValueChange = {
                                         penSize = it
-                                        sourceImgBitmap = sourceBitmap
-                                        sourceImgBitmap = resizeBitmapWithAspectRatio(
-                                            sourceImgBitmap, screenWidth, screenHeight
-                                        )
                                     }, valueRange = 1f..30f, // Define the range of float values
                                     steps = 50, // Optional: Define the number of steps in the range
                                     colors = SliderDefaults.colors(
@@ -376,7 +359,8 @@ class AdvanceEditingPenTool : ComponentActivity() {
                                         .background(appbarColor)
                                         .clickable {
                                             if(!isSelectingColor)
-                                                finalImage = sourceImgBitmap
+                                                finalImage =
+                                                    modifyBitmap(sourceImgBitmap, drawPath, penColor, penSize)
                                         }
                                 ) {
                                     Column(
