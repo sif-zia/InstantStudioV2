@@ -501,8 +501,8 @@ class SelectionModule : ComponentActivity() {
         if(bitmap.height > bitmap.width){
             ratio = bitmap.height.toFloat() / bitmap.width.toFloat()
 
-            scaledWidth = newWidth.toFloat()
-            scaledHeight = newWidth.toFloat()*ratio
+            scaledWidth = newWidth.toFloat()-offsetX
+            scaledHeight = (newWidth.toFloat()-offsetX)*ratio
 
             if(scaledHeight.toInt() > newHeight){
                 scaledHeight = newHeight.toFloat()

@@ -264,19 +264,7 @@ class ForegroundModule : ComponentActivity() {
                     .width(halfScreenWidth * 4))
 
                 var visible by remember { mutableStateOf(true) }
-                AnimatedVisibility(
-                    visible,
-                    enter = slideIn(tween(10000, easing = LinearOutSlowInEasing)) { fullSize ->
 
-                        IntOffset(fullSize.width / 4, 100)
-                    },
-                    exit = slideOut(tween(100, easing = FastOutSlowInEasing)) {
-                        // The offset can be entirely independent of the size of the content. This specifies
-                        // a target offset 180 pixels to the left of the content, and 50 pixels below. This will
-                        // produce a slide-left combined with a slide-down.
-                        IntOffset(-180, 50)
-                    },
-                ) {
 
                     LazyRow(
                         horizontalArrangement = Arrangement.Center,
@@ -524,7 +512,7 @@ class ForegroundModule : ComponentActivity() {
 
                     }
 
-                }
+
             }
 
 
